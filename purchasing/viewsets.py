@@ -140,9 +140,9 @@ class InboundViewSet(NestedViewSetMixin, ModelViewSet):
         if order.received_count < order.count:
             # 如果实际入库数量 < 采购数量，说明订单还未结束
             order.status_id = OrderStatus.WaitForTraffic
-            order.save()
-        instance.status_id = OrderStatus.FINISH
-        instance.save()
+        else:
+            order.status_id = OrderStatus.FINISH
+        order.save()
         if not instance.count:
             return
         # 修改商品的国内库存
