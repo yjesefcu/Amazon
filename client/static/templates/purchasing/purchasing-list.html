@@ -1,0 +1,53 @@
+<section class="content-header">
+    <h1>
+        采购单列表
+    </h1>
+</section>
+<section class="content" ng-controller="PurchasingOrderListCtrl">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+                <div class="box-header with-border" ng-if="userRole === 'admin' || userRole === 'purchasing_agent'">
+                    <h3 class="box-title"><a type="button" ui-sref="index.purchasingCreate" class="btn btn-block btn-primary">新建采购单</a></h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <table id="productTable" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>商品SKU</th>
+                                <th>采购日期</th>
+                                <th>采购单价{{currency}}</th>
+                                <th>数量</th>
+                                <th>已入库</th>
+                                <th>当前状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="p in orders"table-repeat-directive>
+                                <td><a href="#" ui-sref="index.purchasingDetail({orderId: p.id})"> {{ $index + 1 }}</a></td>
+                                <td>{{ p.SellerSKU }}</td>
+                                <td>{{ p.create_time }}</td>
+                                <td>{{p.price}}</td>
+                                <td>{{p.count}}</td>
+                                <td>{{ p.received_count }}</td>
+                                <td>{{ p.status.name }}</td>
+                                <td>
+                                    <a href="#" ui-sref="index.purchasingDetail({orderId: p.id})" ng-if="p.canEdit">处理</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+<script>
+    $(function () { $("[data-toggle='tooltip']").tooltip(); });
+</script>

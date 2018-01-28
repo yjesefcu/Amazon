@@ -1,0 +1,77 @@
+<style>
+    dt{
+        width: 110px !important;
+    }
+    dd{
+        margin-left: 130px !important;
+    }
+    dt,dd{
+        line-height: 2;
+        font-size: 16px;
+    }
+</style>
+
+<div class="row" ng-controller="settlementDetailCtrl">
+    <div class="col-md-12">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">结算周期：{{ settlement.StartDate }} - {{ settlement.EndDate }}</h3>
+            </div>
+            <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="row" style="margin-bottom: 16px;" ng-if="isSettlement">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" >上传月度仓储费报告</label>
+                            <div class="col-sm-6 col-xs-8">
+                                <input id='storageFile' type="file" data-buttonName="btn-primary" ng-model="storageFile" accept="text/plain" style="display: inline-block;">
+                            </div>
+                            <div class="col-sm-4">
+                                <button class="btn btn-primary" ng-click="sendStorageFile()" ng-if="!storage_uploading">上传</button>
+                                <button class="btn btn-primary disabled" ng-if="storage_uploading"><i class="fa fa-spinner fa-span"></i> 正在上传...</button>
+                            </div>
+                            <label class="col-sm-2"></label>
+                            <div class="col-sm-10" style="color:#999;">仓储报告按每个月的最后一天计算，保存到对应的结算周期内</div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" >上传移除报告</label>
+                            <div class="col-sm-6 col-xs-8">
+                                <input id='removalFile' type="file" data-buttonName="btn-primary" ng-model="fileToUpload" accept="text/plain" style="display: inline-block;">
+
+                            </div>
+                            <div class="col-sm-4">
+                                <button class="btn btn-primary" ng-click="sendRemovalFile()" ng-if="!removal_uploading">上传</button>
+                                <button class="btn btn-primary disabled" ng-if="removal_uploading"><i class="fa fa-spinner fa-span"></i> 正在上传...</button>
+                            </div>
+                            <label class="col-sm-2"></label>
+                            <div class="col-sm-10" style="color:#999;">只会读取报告中的last-updated-date在结算日期内的记录，其他记录不会服务。如果再次上传移除报告，将会先清除原有的记录</div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" >上传广告报告</label>
+                            <div class="col-sm-6 col-xs-8">
+                                <input id='advertisingFile' type="file" data-buttonName="btn-primary" ng-model="fileToUpload" accept="text/plain" style="display: inline-block;">
+
+                            </div>
+                            <div class="col-sm-4">
+                                <button class="btn btn-primary" ng-click="sendAdvertisingFile()" ng-if="!advertising_uploading">上传</button>
+                                <button class="btn btn-primary disabled" ng-if="advertising_uploading"><i class="fa fa-spinner fa-span"></i> 正在上传...</button>
+                            </div>
+                            <label class="col-sm-2"></label>
+                            <div class="col-sm-10" style="color:#999;">如果是周/月报告，则会将费用按7天/30天平均，并取结算周期范围内的日期进行保存</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 16px;">
+                    <div class="col-md-12">
+                        <label class="control-label">请设置实际广告费用</label>
+                        <input placeholder="请输入结算周期内的广告费用，格式为负数" style="width: 300px;" ng-model="advertising_fee">&nbsp;&nbsp;&nbsp;
+                        <button class="btn btn-primary" ng-click="setAdvertising()">确定</button>
+                    </div>
+                </div>
+        </div>
+    </div>
+    <div ng-include="'/static/templates/settlement_order_detail.html'" ng-controller="settlementOrdersCtrl"></div>
+</div>

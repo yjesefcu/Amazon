@@ -1,0 +1,22 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">结算周期：{{ settlement.StartDate}} - {{ settlement.EndDate }}</h4>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal">
+        <div class="box-body">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">订阅费</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" placeholder="请设置该结算周期订阅费" ng-model="subscribe_fee" required>
+                </div>
+                <label class="col-sm-1 control-label unit">{{ currency }}</label>
+            </div>
+        </div>
+        <!-- /.box-body -->
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default pull-left" data-dismiss="modal" ng-click="cancel()">取消</button>
+    <button type="button" class="btn btn-primary" ng-click="save()">确认</button>
+</div>

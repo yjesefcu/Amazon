@@ -1,0 +1,8 @@
+<div ng-controller="ProductOrdersCtrl">
+    <div class="col-md-12">
+        <div class="box-header with-border">
+            <h3 class="box-title">结算周期（{{settlement.StartDate}} ~ {{settlement.EndDate}}）</h3>
+        </div>
+        <div ng-include="'/static/templates/settlement_order_detail.html'" ng-controller="settlementOrdersCtrl"></div>
+    </div>
+</div>

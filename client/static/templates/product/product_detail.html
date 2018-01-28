@@ -1,0 +1,270 @@
+<style>
+    dt{
+        width: 110px !important;
+    }
+    dd{
+        margin-left: 130px !important;
+    }
+    dt,dd{
+        line-height: 2;
+        font-size: 16px;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        商品详情
+    </h1>
+</section>
+<section class="content" ng-controller="ProductEditCtrl">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">商品基本信息</h3>
+                    <a class="btn btn-primary pull-right" ui-sref="index.productDetailEdit({productId: productId})">编辑</a>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <dl class="dl-horizontal">
+                                    <dt>卖家SKU</dt>
+                                    <dd>{{ formData.SellerSKU }}</dd>
+                                    <dt>ASIN</dt>
+                                    <dd>{{ formData.ASIN }}</dd>
+                                    <dt>国内库存</dt>
+                                    <dd>{{ formData.domestic_inventory }}</dd>
+                                    <dt>亚马逊库存</dt>
+                                    <dd>{{ formData.amazon_inventory }}</dd>
+                                    <dt>商品说明</dt>
+                                    <dd>{{ formData.TitleCn}}</dd>
+                                </dl>
+                            </div>
+                            <div class="col-sm-6">
+                                <dl class="dl-horizontal" style="font-size: 14px;">
+                                    <dt>图片</dt>
+                                    <dd><img ng-show="productIcon" src="{{ productIcon }}" style="height: 70px; "></dd>
+                                    <dt>商品规格</dt>
+                                    <dd>长：{{ formData.length}}cm&nbsp;&nbsp;&nbsp;宽：{{ formData.width }}cm&nbsp;&nbsp;&nbsp;高：{{ formData.height }}cm&nbsp;&nbsp;&nbsp;重量：{{formData.weight}}kg</dd>
+                                    <dt>外包装规格</dt>
+                                    <dd>长：{{ formData.package_length}}英寸&nbsp;&nbsp;&nbsp;宽：{{ formData.package_width }}英寸&nbsp;&nbsp;&nbsp;高：{{ formData.package_height }}英寸&nbsp;&nbsp;&nbsp;<br>重量：{{formData.package_weight}}英镑&nbsp;&nbsp;&nbsp;体积重：{{ formData.volume_weight }}KGS</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+    <!-- 采购单 -->
+    <div class="row">
+        <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+                <div class="box-header with-border" ng-click="purchasingOrders=!purchasingOrders">
+                    <h3 class="box-title">采购单（{{purchasingOrders.length}}）
+                        <a class="btn btn-primary" style="margin-left: 16px;" ui-sref="index.purchasingCreate()">新建采购单</a>
+                    </h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" ng-show="purchasingOrders.length" style="overflow-x: auto;">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>采购日期</th>
+                            <th>采购数量</th>
+                            <th>商品单价({{ currency }})</th>
+                            <th>入库数量</th>
+                            <th>商品总价</th>
+                            <th>总运费</th>
+                            <th>订单状态</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="p in purchasingOrders" table-repeat-directive>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ p.create_time }}</td>
+                            <td>{{ p.count }}</td>
+                            <td>{{p.price}}</td>
+                            <td>{{ p.received_count }}</td>
+                            <td>{{ p.price*p.count}}</td>
+                            <td>{{ p.traffic_fee }}</td>
+                            <td>{{ p.status.name }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+    <!-- end 采购单 -->
+    <div class="row">
+        <div class="col-md-12">
+        <!-- general form elements -->
+        <div class="box box-primary">
+            <div class="box-header with-border" ng-click="showSupplies=!showSupplies">
+                <h3 class="box-title">入库货件（{{supplies.length}}）
+                    <button class="btn btn-primary" style="margin-left: 16px;" ng-click="openSupplyModal(productId);$event.stopPropagation();">添加入库货件</button>
+                </h3>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body" ng-show="showSupplies" style="overflow-x: auto;">
+                <table id="inboundShipements" class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>日期</th>
+                        <th>商品数量</th>
+                        <th>库存</th>
+                        <th>商品单价({{ currency }})</th>
+                        <th>总运费({{ currency }})</th>
+                        <th>杂费({{ currency }})</th>
+                        <th>杂费说明</th>
+                        <th>单位成本({{ currency }})</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="p in supplies" table-repeat-directive>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ p.ship_date }}</td>
+                        <td>{{ p.count }}</td>
+                        <td>{{p.real_inventory}}</td>
+                        <td>{{ p.unit_price }}</td>
+                        <td>{{ p.total_freight}}</td>
+                        <td>{{ p.charges }}</td>
+                        <td>{{ p.charges_comment }}</td>
+                        <td>
+                            <input ng-if="p.isEdit" class="md" ng-model="p.unit_cost_new">
+                            <span ng-if="!p.isEdit">{{p.unit_cost}}</span>
+                        </td>
+                        <td>{{p.ShipmentName}}</td>
+                        <td>
+                            <a class="fa fa-pencil" ng-click="p.unit_cost_new=p.unit_cost;p.isEdit=true" ng-if="!p.isEdit" title="修改单位成本"></a>
+                            <a class="fa fa-check text-green" ng-click="saveSupplyCost($index, p.id )" ng-if="p.isEdit" title="保存"></a>
+                            <a class="fa fa-close text-red" ng-click="p.isEdit=false" ng-if="p.isEdit" title="取消"></a>
+                            <a class="fa fa-trash-o text-red" title="删除该记录" ng-click="deleteSupply($index,p.id)"></a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+        <!-- general form elements -->
+        <div class="box box-primary">
+            <div class="box-header with-border" ng-click="showShipments=!showShipments">
+                <h3 class="box-title">移库货件（{{shipments.length}}）
+                <a class="btn btn-primary" style="margin-left: 16px;" ui-sref="index.shipment">添加移库货件</a>
+                </h3>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body" ng-show="showShipments" style="overflow-x: auto;">
+                <table id="outboundShipements" class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>日期</th>
+                        <th>货件Id</th>
+                        <th>数量</th>
+                        <th>库存</th>
+                        <th>运费单价({{ currency }})</th>
+                        <th>燃油附加税</th>
+                        <th>关税({{ currency }})</th>
+                        <th>总运费({{ currency }})</th>
+                        <th>单位成本({{currency}})</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="p in shipments" table-repeat-directive>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ p.ship_date }}</td>
+                        <td><a ui-sref="index.shipmentDetail({id: p.shipment_id})">{{ p.ShipmentId }}</a></td>
+                        <td>{{ p.QuantityShipped }}</td>
+                        <td>{{ p.inventory }}</td>
+                        <td>{{ p.unit_freight}}</td>
+                        <td>{{ p.fuel_tax }}</td>
+                        <td>{{ p.duty }}</td>
+                        <td>{{ p.total_freight }}</td>
+                        <td>{{p.unit_cost}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+    </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+        <!-- general form elements -->
+        <div class="box box-primary">
+            <div class="box-header with-border" ng-click="showSettlements=!showSettlements">
+                <h3 class="box-title">结算记录({{settlements.length}})</h3>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body" ng-show="showSettlements" style="overflow-x: auto;">
+                <table id="settlements" class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>数量</th>
+                            <th class="td-sale">订单({{ currency }})</th>
+                            <th class="td-sale">退款({{ currency }})</th>
+                            <th class="td-sale">其他服务费({{ currency }})</th>
+                            <th class="td-sale">其他交易({{ currency }})</th>
+                            <th class="td-sale">实收({{ currency }})</th>
+                            <th class="td-cost">广告费({{ currency }})</th>
+                            <th class="td-cost">仓储费({{ currency }})</th>
+                            <th class="td-cost">订阅费({{ currency }})</th>
+                            <th class="td-cost">成本({{ currency }})</th>
+                            <th class="td-cost">总成本({{ currency }})</th>
+                            <th>利润({{ currency }})</th>
+                            <th>利润率</th>
+                            <th>操作</th>
+                            <!--<th>操作</th>-->
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="s in settlements"table-repeat-directive>
+                        <td><a ui-sref="index.productDetail.settlement({productId: productId, settlementId: s.settlement.id})">{{ s.settlement.StartDate }} - {{s.settlement.EndDate}}</a></td>
+                        <td>{{ s.Quantity }}</td>
+                            <td class="td-sale">{{ s.sales }}</td>
+                            <td class="td-sale">{{ s.refund }}</td>
+                            <td class="td-sale">{{ s.other_fee }}</td>
+                            <td class="td-sale">{{ s.other_trade }}</td>
+                            <td class="td-sale">{{s.income}}</td>
+                            <td class="td-cost"> {{ s.advertising_fee_adjust ? s.advertising_fee_adjust : s.advertising_fee }}</td>
+                            <td class="td-cost">{{ s.storage_fee }}</td>
+                            <td class="td-cost">{{s.subscription_fee}}</td>
+                            <td class="td-cost">{{s.cost}}</td>
+                            <td class="td-cost">{{s.total_cost}}</td>
+                            <td>{{ s.profit }}</td>
+                            <td>{{ s.profit_rate }}</td>
+                            <td>
+                                <button ng-click="calc_products(s.id)" class="btn btn-primary" ng-if="!isCalculating">开始计算</button>
+                                <button class="btn btn-primary disabled" ng-if="isCalculating"><i class="fa fa-spinner fa-span"></i>正在计算...</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+    </div>
+    </div>
+    <div class="row" ui-view></div>
+</section>

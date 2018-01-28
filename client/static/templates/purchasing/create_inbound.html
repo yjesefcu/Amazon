@@ -1,0 +1,64 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">添加入库货件</h4>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal">
+        <div class="box-body">
+            <div class="col-sm-12">
+                <h4>产品规格：</h4>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">长度</span><input type="text" class="form-control" ng-model="product.length" required ng-change="productChanged()">
+                    <span class="label-right">cm</span>
+                </div>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">宽度</span><input type="text" class="form-control" ng-model="product.width" required ng-change="productChanged()">
+                    <span class="label-right">cm</span>
+                </div>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">高度</span><input type="text" class="form-control" ng-model="product.height" required ng-change="productChanged()">
+                    <span class="label-right">cm</span>
+                </div>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">重量</span><input type="text" class="form-control" ng-model="product.weight" required ng-change="productChanged()">
+                    <span class="label-right">kg</span>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <h4>产品包装后规格：</h4>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">长度</span><input type="text" class="form-control" ng-model="product.package_length" required ng-change="productChanged()">
+                    <span class="label-right">cm</span>
+                </div>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">宽度</span><input type="text" class="form-control" ng-model="product.package_width" required ng-change="productChanged()">
+                    <span class="label-right">cm</span>
+                </div>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">高度</span><input type="text" class="form-control" ng-model="product.package_height" required ng-change="productChanged()">
+                    <span class="label-right">cm</span>
+                </div>
+                <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                    <span class="label-left">重量</span><input type="text" class="form-control" ng-model="product.package_weight" required ng-change="productChanged()">
+                    <span class="label-right">kg</span>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <h4>入库数量：</h4>
+                <div class="col-sm-6 col-xs-6 col-md-6 input-horizontal">
+                    <input type="text" class="form-control" placeholder="请输入商品数量" ng-model="inbound.count" required>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <h4>运费({{currency}})：</h4>
+                <div class="col-sm-6 col-xs-6 col-md-6 input-horizontal">
+                    <input type="text" class="form-control" placeholder="请输入运费" ng-model="inbound.traffic_fee" required>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <!--<button type="button" class="btn btn-default pull-left" data-dismiss="modal" ng-click="cancel()">取消</button>-->
+    <button type="button" class="btn btn-primary" ng-click="save()">保存</button>
+</div>

@@ -1,0 +1,102 @@
+<div ng-controller="ProductEditCtrl">
+<section class="content-header">
+    <h1 ng-hide="isDetail">添加商品</h1>
+    <h1 ng-show="isDetail">商品信息编辑</h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title" ng-hide="isDetail">添加商品信息</h3>
+                    <h3 class="box-title" ng-show="isDetail">修改商品信息</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form">
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >SKU</label>
+                                <input type="text" class="form-control" placeholder="卖家SKU" ng-model="formData.SellerSKU" ng-if="!isDetail">
+                                <input type="text" class="form-control" placeholder="卖家SKU" ng-model="formData.SellerSKU" readonly ng-if="isDetail">
+                            </div>
+                            <!--<div class="form-group col-sm-3 col-xs-6">-->
+                                <!--<label>FNSKU</label>-->
+                                <!--<input type="text" class="form-control" placeholder="FNSKU" ng-model="formData.FNSKU" >-->
+                            <!--</div>-->
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>ASIN</label>
+                                <input type="text" class="form-control" placeholder="ASIN" ng-model="formData.ASIN" >
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>图片</label>
+                                <input type="file" placeholder="选择商品图片" accept="image/*" name="images"
+                                       onchange="angular.element(this).scope().img_upload(this.files)" style="width: 75px;">
+                                <input type="text" ng-model="formData.Image" hidden>
+                                <img ng-show="productIcon" src="{{ productIcon }}" style="height: 70px; position: absolute;top: 0px;left: 90px;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-sm-6 col-xs-6">
+                                <label>商品描述</label>
+                                <input type="text" class="form-control" placeholder="请输入商品描述" ng-model="formData.TitleCn" >
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-sm-6">
+                                <label>商品规格</label>
+                                <div class="row">
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">长度</span><input type="text" class="form-control" ng-model="formData.length"required>
+                                        <span class="label-right">英寸</span>
+                                    </div>
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">宽度</span><input type="text" class="form-control" ng-model="formData.width" required>
+                                        <span class="label-right">英寸</span>
+                                    </div>
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">高度</span><input type="text" class="form-control" ng-model="formData.height" required>
+                                        <span class="label-right">英寸</span>
+                                    </div>
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">重量</span><input type="text" class="form-control" ng-model="formData.weight" required>
+                                        <span class="label-right">英镑</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>商品包装规格</label>
+                                <div class="row">
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">长度</span><input type="text" class="form-control" ng-model="formData.package_length"required>
+                                        <span class="label-right">英寸</span>
+                                    </div>
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">宽度</span><input type="text" class="form-control" ng-model="formData.package_width" required>
+                                        <span class="label-right">英寸</span>
+                                    </div>
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">高度</span><input type="text" class="form-control" ng-model="formData.package_height" required>
+                                        <span class="label-right">英寸</span>
+                                    </div>
+                                    <div class="col-sm-3 col-xs-3 col-md-3 input-horizontal">
+                                        <span class="label-left">重量</span><input type="text" class="form-control" ng-model="formData.package_weight" required>
+                                        <span class="label-right">英镑</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary" ng-click="submitForm();">保存</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+</div>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>亚马逊结算中心</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="/static/components/AdminLTE/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/components/components-font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/components/Ionicons/css/ionicons.min.css">
+    <link rel="stylesheet" href="/static/components/AdminLTE/dist/css/AdminLTE.min.css">
+    <link rel="stylesheet" href="/static/components/AdminLTE/dist/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="/static/components/angular-atomic-notify/dist/angular-atomic-notify.min.css">
+    <link rel="stylesheet" href="/static/components/AdminLTE/plugins/datatables/dataTables.bootstrap.css">
+    <link rel="stylesheet" href="/static/components/angularjs-datepicker/dist/angular-datepicker.css">
+    <link rel="stylesheet" href="/static/css/index.css">
+
+    <script src="/static/components/AdminLTE/plugins/jQuery/jquery-2.2.3.min.js"></script>
+    <script src="/static/components/angular/angular.min.js"></script>
+    <script src="/static/components/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/router.js"></script>
+    <!--<script src="/static/js/controllers/home-ctrl.js"></script>-->
+    <!--<script src="/static/js/controllers/product-ctrl.js"></script>-->
+</head>
+<body class="hold-transition skin-blue sidebar-mini" ng-app="myApp">
+{% verbatim %}
+<ng-atomic-notify></ng-atomic-notify>
+<div class="wrapper" ng-controller="MainCtrl">
+    <header class="main-header">        <!-- Logo -->
+        <a href="#" class="logo">
+            <!-- mini logo for sidebar mini 50x50 pixels -->
+            <span class="logo-mini">结算系统</span>
+            <!-- logo for regular state and mobile devices -->
+            <span class="logo-lg"><b>结算系统</b></span>
+        </a>
+        <!-- Header Navbar: style can be found in header.less -->
+        <nav class="navbar navbar-static-top">
+            <!-- Sidebar toggle button-->
+            <a class="sidebar-toggle" data-toggle="offcanvas" role="button">
+                <span class="sr-only">Toggle navigation</span>
+            </a>
+            <div class="navbar-custom-menu">
+                <ul class="nav navbar-nav">
+                    <!-- Control Sidebar Toggle Button -->
+                    <li>
+                        <a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" href="javascript:void(0)">
+                            <i class="fa fa-user"></i><span>{{user.first_name}}</span><span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="/logout">
+                                    <i class="fa fa-sign-out text-aqua"></i> 注销
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="navbar-custom-menu dropdown" style="height: 50px;margin-right: 50px;">
+                <a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true" style="line-height: 50px;color: #fff;font-size: 16px;">
+                    {{ currentMarket.country }} <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li role="presentation" ng-repeat="market in markets" ng-click="chooseMarket($index);"><a role="menuitem" tabindex="-1" href="#">{{ market.country }}</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <!-- Left side column. contains the logo and sidebar -->
+    <aside class="main-sidebar">
+        <!-- sidebar: style can be found in sidebar.less -->
+        <section class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="header">MAIN NAVIGATION</li>
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/users')==0 }" ng-if="userRole==='admin'">
+                    <a ui-sref="index.users" ng-click="currentUrl='/users'">
+                        <i class="fa  fa-users"></i>
+                        <span>用户管理</span>
+                    </a>
+                </li>
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/product')==0 }">
+                    <a ui-sref="index.products" ng-click="currentUrl='/products'">
+                        <i class="fa  fa-file-text-o"></i>
+                        <span>商品列表</span>
+                    </a>
+                </li>
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/purchasing')==0 }">
+                    <a ui-sref="index.purchasing" ng-click="currentUrl='/purchasing'">
+                        <i class="fa  fa-file-text-o"></i>
+                        <span>采购单管理</span>
+                    </a>
+                </li>
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/shipment')==0 }" ng-if="userRole==='admin'">
+                    <a ui-sref="index.shipment" ng-click="currentUrl='/shipment'">
+                        <i class="fa fa-truck"></i> <span>移库货件</span>
+                    </a>
+                </li>
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/settlement')==0 }" ng-if="userRole==='admin' || userRole==='finance'">
+                    <a ui-sref="index.settlement" ng-click="currentUrl='/settlement'">
+                        <i class="fa fa-dollar "></i> <span>结算中心</span>
+                    </a>
+                </li>
+            </ul>
+        </section>
+        <!-- /.sidebar -->
+    </aside>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper" ui-view>
+    </div>
+</div>
+<!-- 告警框  -->
+<div style="width: 300px;position: absolute;top: 0px;right: 0px;margin: 16px;z-index:9999;">
+    <script type="text/ng-template" id="alert.html" >
+        <div ng-transclude></div>
+    </script>
+    <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')" close="closeAlert($index)" dismiss-on-timeout="3000" ng-click="closeAlert($index);">{{alert.msg}}</div>
+</div>
+<!-- 告警框 end -->
+<!-- ./wrapper -->
+    <script src="/static/components/AdminLTE/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/components/AdminLTE/plugins/slimScroll/jquery.slimscroll.min.js"></script>
+    <script src="/static/components/AdminLTE/plugins/fastclick/fastclick.js"></script>
+    <!-- DataTables -->
+    <script src="/static/components/AdminLTE/plugins/datatables/jquery.dataTables.js"></script>
+    <script src="/static/components/AdminLTE/plugins/datatables/dataTables.bootstrap.min.js"></script>
+    <script src="/static/components/AdminLTE/dist/js/app.min.js"></script>
+    <script src="/static/components/angular-atomic-notify/dist/angular-atomic-notify.min.js"></script>
+    <script src="/static/components/angular-bootstrap/ui-bootstrap.min.js"></script>
+    <script src="/static/components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="/static/components/angularjs-datepicker/dist/angular-datepicker.js"></script>
+    <script src="/static/js/services/service-factory.js"></script>
+    <script src="/static/js/services/file-upload.js"></script>
+    <script src="/static/js/controllers/product-ctrl.js"></script>
+    <script src="/static/js/controllers/shipment-ctrl.js"></script>
+    <script src="/static/js/controllers/settlement-ctrl.js"></script>
+    <script src="/static/js/controllers/user-ctrl.js"></script>
+    <script src="/static/js/controllers/purchasing-ctrl.js"></script>
+    <script src="/static/js/jquery/bootstrap-filestyle/bootstrap-filestyle.min.js"></script>
+    <!--<script src="/static/components/AdminLTE/dist/js/demo.js"></script>-->
+    {% endverbatim %}
+</body>
+</html>

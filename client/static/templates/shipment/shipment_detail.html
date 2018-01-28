@@ -1,0 +1,128 @@
+
+<section class="content-header">
+    <h1>
+        创建移库记录（国内->亚马逊）
+    </h1>
+</section>
+<section class="content" ng-controller="OutboundEditCtrl">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">添加货件信息</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form">
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >货件Id</label>
+                                <input type="text" class="form-control" placeholder="亚马逊货件Id" ng-model="formData.ShipmentId">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <input ng-model="supply.product" hidden>
+                                <label>发货日期</label>
+                                <div class="datepicker">
+                                    <div class="datepicker"
+                                         date-format="yyyy-MM-dd"
+                                         button-prev='<i class="fa fa-arrow-circle-left"></i>'
+                                         button-next='<i class="fa fa-arrow-circle-right"></i>'>
+                                        <input ng-model="formData.ship_date" type="text" placeholder="请选择发货日期" class="angular-datepicker-input form-control" required />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >物流公司</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.logistics_company">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >运单号</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.logistics_id">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >总运费({{ currency }})</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.total_freight">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >总关税({{ currency }})</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.duty">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >备注</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.comment">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+                    <!--<div class="box-footer">-->
+                    <!--<button type="submit" class="btn btn-primary" ng-click="submitForm();">保存</button>-->
+                    <!--</div>-->
+                </form>
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="box box-primary">
+                <!-- /.box-header -->
+                <div class="box-body" style="overflow-y: auto;">
+                    <h4 style="color: red;" ng-show="error_msg">{{ error_msg }}</h4>
+                    <table class="table table-bordered table-hover" style="min-width: 1100px;">
+                        <thead>
+                        <tr>
+                            <th colspan="5" class="dark-border">基本信息</th>
+                            <th colspan="5" class="dark-border">外包装</th>
+                            <th colspan="1" class="dark-border">成本</th>
+                            <th class="dark-border">操作</th>
+                        </tr>
+                        <tr>
+                            <th>SKU</th>
+                            <th>数量</th>
+                            <th>库存</th>
+                            <th>运费<br>{{ currentcy }}</th>
+                            <th>关税</th>
+                            <th>长<br>cm</th>
+                            <th>宽<br>cm</th>
+                            <th>高<br>cm</th>
+                            <th>实际重量<br>kg</th>
+                            <th>体积重<br>kg</th>
+                            <th>单位成本<br>{{currency}}</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="p in products">
+                            <td>{{p.SellerSKU}}</td>
+                            <td>{{p.QuantityShipped}}</td>
+                            <td>{{ p.inventory }}</td>
+                            <td>{{p.total_freight}}</td>
+                            <td>{{p.duty}}</td>
+                            <td>{{p.length}}</td>
+                            <td>{{p.width}}</td>
+                            <td>{{p.height}}</td>
+                            <td>{{p.weight}}</td>
+                            <td>{{p.volume_weight}}</td>
+                            <td><input ng-if="p.isEdit" ng-model="p.unit_cost_new" class="md">
+                                <span ng-if="!p.isEdit">{{p.unit_cost}}</span></td>
+                            <td>
+                                <a class="fa fa-pencil" ng-click="p.unit_cost_new=p.unit_cost;p.isEdit=true;" ng-if="!p.isEdit" title="修改单位成本"></a>
+                                <a class="fa fa-check text-green" ng-click="p.unit_cost=p.unit_cost_new;saveItem($index, p.id)" ng-if="p.isEdit" title="保存"></a>
+                                <a class="fa fa-close text-red" ng-click="p.isEdit=false;" ng-if="p.isEdit" title="取消"></a>
+                                <a class="fa fa-trash-o text-red" title="删除该记录" ng-click="deleteItem($index,p.id)"></a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col col-md-12">
+            <button ng-click="deleteShipment()" class="btn btn-danger">删除</button>
+        </div>
+    </div>
+</section>

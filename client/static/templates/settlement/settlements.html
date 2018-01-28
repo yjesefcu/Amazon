@@ -1,0 +1,95 @@
+<section class="content-header">
+    <h1>
+        结算中心
+    </h1>
+</section>
+<section class="content" ng-controller="settlementCtrl">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">结算记录</h3>
+                    <!--<button class="btn btn-primary" ng-if="readingReport==0" ng-click="startReadingReport()">同步数据</button>
+                    <button class="btn btn-primary" ng-if="readingReport==10"><i class="fa fa-refresh fa-spin"></i>正中同步数据，请勿关闭系统...</button>
+                    <button class="btn btn-danger" ng-if="readingReport==1" ng-click="startReadingReport()">同步失败</button> -->
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" style="overflow-x: auto;">
+                    <div ng-if="errorInfo" class="text-red" style="margin-bottom: 16px;">{{ errorInfo }}</div>
+
+                    <div class="row" style="margin-bottom: 16px;" ng-show="storageInvalid || removalInvalid || advertisingInvalid">
+
+                        <div class="col-md-12 text-red"><div class="col-md-12"><h4>以下报告或数据未初始化：</h4></div></div>
+                        <div class="col-md-12 form-group" ng-show="storageInvalid">
+                            <label class="control-label" >上传月度仓储费报告</label>
+                            <input id='glbalStorageFile' type="file" data-buttonName="btn-primary" ng-model="glbalStorageFile" accept="text/plain" style="display: inline-block;">
+                            <button class="btn btn-primary" ng-click="sendStorageFile()">上传</button>
+                            &nbsp;&nbsp;&nbsp;或：<button class="btn btn-warning" ng-click="skipStorageReport()">没有报告，直接跳过</button>
+                        </div>
+                        <div class="col-md-12 form-group" ng-show="removalInvalid">
+                            <label class="control-label" style="width: 126px;text-align: right">上传移除报告</label>
+                            <input id='globalRemovalFile' type="file" data-buttonName="btn-primary" ng-model="globalRemovalFile" accept="text/plain" style="display: inline-block;">
+                            <button class="btn btn-primary" ng-click="sendRemovalFile()">上传</button>
+                            &nbsp;&nbsp;&nbsp;或：<button class="btn btn-warning" ng-click="skipRemovalReport()">没有报告，直接跳过</button>
+                        </div>
+                        <div class="col-md-12" ng-show="advertisingInvalid">
+                            <label class="control-label">请设置实际广告费用</label>
+                            <input placeholder="请输入结算周期内的广告费用，格式为负数" style="width: 300px;" ng-model="advertising_fee">&nbsp;&nbsp;&nbsp;
+                            <button class="btn btn-primary" ng-click="setAdvertising()">确定</button>
+                        </div>
+                    </div>
+                    <table id="overseaTable" class="table table-bordered table-hover table-lg" style="border-top:#eee 1px solid;">
+                        <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>数量</th>
+                            <th class="td-sale">订单({{ currency }})</th>
+                            <th class="td-sale">退款({{ currency }})</th>
+                            <th class="td-sale">其他服务费({{ currency }})</th>
+                            <th class="td-sale">其他交易({{ currency }})</th>
+                            <th class="td-sale">实收({{ currency }})</th>
+                            <th class="td-cost">广告费({{ currency }})</th>
+                            <th class="td-cost">仓储费({{ currency }})</th>
+                            <th class="td-cost">订阅费({{ currency }})</th>
+                            <th class="td-cost">成本({{ currency }})</th>
+                            <th class="td-cost">总成本({{ currency }})</th>
+                            <th>利润({{ currency }})</th>
+                            <th>利润率</th>
+                            <!--<th>操作</th>-->
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="s in settlements"table-repeat-directive>
+                            <td><a ui-sref="index.settlement.detail({settlementId: s.id})">{{ s.StartDate }} - {{s.EndDate}}</a></td>
+                            <td>{{ s.Quantity }}</td>
+                            <td class="td-sale">{{ s.sales }}</td>
+                            <td class="td-sale">{{ s.refund }}</td>
+                            <td class="td-sale">{{ s.other_fee }}</td>
+                            <td class="td-sale">{{ s.other_trade }}</td>
+                            <td class="td-sale">{{s.income}}</td>
+                            <td class="td-cost"> {{ s.advertising_fee_adjust ? s.advertising_fee_adjust : s.advertising_fee }}</td>
+                            <td class="td-cost">{{ s.storage_fee }}</td>
+                            <td class="td-cost">{{s.subscription_fee}}</td>
+                            <td class="td-cost">{{s.cost}}</td>
+                            <td class="td-cost">{{s.total_cost}}</td>
+                            <td>{{ s.profit }}</td>
+                            <td>{{ s.profit_rate }}</td>
+                           <!-- <td>
+                                <button ng-click="startCalculate($index, s.id)" class="btn btn-danger" ng-if="s.calc_status==1 && !isDownloading">计算失败</button>
+                                <button ng-click="startCalculate($index, s.id)" class="btn btn-primary" ng-if="s.calc_status==0 && !isDownloading">开始计算</button>
+                                <i class="fa fa-refresh fa-spin" ng-if="s.calc_status==10 && !isDownloading"></i>
+                                <button class="btn btn-default" ng-if="!s.isDownloading" ng-click="download($index, s.id)">下载</button>
+                                <button class="btn btn-default" ng-if="s.isDownloading"><i class="fa fa-refresh fa-spin"></i>正在生成</button>
+                            </td>  -->
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+<div ui-view></div>
+</section>

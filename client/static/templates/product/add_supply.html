@@ -1,0 +1,61 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">添加入库货件</h4>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal">
+        <div class="box-body">
+            <div class="form-group">
+                <input ng-model="supply.product" hidden>
+                <label class="col-sm-2 control-label">货件日期</label>
+                <div class="datepicker col-sm-9" style="width: 75%">
+                    <div class="datepicker"
+                         date-format="yyyy-MM-dd"
+                         button-prev='<i class="fa fa-arrow-circle-left"></i>'
+                         button-next='<i class="fa fa-arrow-circle-right"></i>'>
+                        <input ng-model="supply.ship_date" type="text" placeholder="请选择货件日期" class="angular-datepicker-input form-control" required />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">商品单价</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" placeholder="请输入商品单价" ng-model="supply.unit_price" required>
+                </div>
+                <label class="col-sm-1 control-label unit">{{ currency }}</label>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">商品数量</label>
+
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" placeholder="请输入商品数量" ng-model="supply.count" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">总运费</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" placeholder="请输入总运费" ng-model="supply.total_freight" required>
+                </div>
+                <label class="col-sm-1 control-label unit">{{ currency }}</label>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">杂费</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" placeholder="杂费" ng-model="supply.charges">
+                </div>
+                <label class="col-sm-1 control-label unit">{{ currency }}</label>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">杂费说明</label>
+                <div class="col-sm-9">
+                    <textarea type="text" class="form-control" placeholder="对杂费进行说明" ng-model="supply.charges_comment"></textarea>
+                </div>
+            </div>
+        </div>
+        <!-- /.box-body -->
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default pull-left" data-dismiss="modal" ng-click="cancel()">取消</button>
+    <button type="button" class="btn btn-primary" ng-click="save()">保存</button>
+</div>

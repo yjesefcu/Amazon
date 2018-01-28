@@ -1,0 +1,374 @@
+
+<div class="col-md-12" ng-if="isSettlement">
+    <!-- general form elements -->
+    <div class="box box-primary">
+        <div class="box-header with-border" onclick="$(this).next().toggle()">
+            <h3 class="box-title">商品统计（{{ products.length}}）</h3>
+            <i class="fa fa-refresh fa-spin" ng-if="productLoading"></i>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="display: none;overflow-x: auto;">
+            <div class="row" style="padding: 8px 16px;">
+                <button class="btn btn-default" style="margin-right: 16px;" title="根据进价、运费等计算商品的成本，并自动计算利润" ng-if="!isCalcCost" ng-click="calc_products('calc_cost')">计算成本</button>
+                <button class="btn btn-default disabled" style="margin-right: 16px;" title="根据进价、运费等计算商品的成本，并自动计算利润" ng-if="isCalcCost"><i class="fa fa-spinner fa-span"></i>正在计算...</button>
+                <button class="btn btn-default" title="根据已计算的成本，直接重新计算利润" ng-click="calc_products('calc_profit')" ng-if="!isCalcProfit">计算利润</button>
+                <button class="btn btn-default disabled" title="根据已计算的成本，直接重新计算利润" ng-if="isCalcProfit"><i class="fa fa-spinner fa-span"></i>正在计算...</button>
+            </div>
+            <table id="summaryTable" class="table table-bordered table-hover table-lg">
+                <thead>
+                <tr>
+                    <th>操作</th>
+                    <th>序号</th>
+                    <th>SKU</th>
+                    <th>商品图片</th>
+                    <th>商品描述</th>
+                    <th>数量</th>
+                    <th class="td-sale">订单({{ currency }})</th>
+                    <th class="td-sale">退款({{ currency }})</th>
+                    <th class="td-sale">其他服务费({{ currency }})</th>
+                    <th class="td-sale">其他交易({{ currency }})</th>
+                    <th class="td-sale">实收({{ currency }})</th>
+                    <th class="td-cost">广告费({{ currency }})</th>
+                    <th class="td-cost">仓储费({{ currency }})</th>
+                    <th class="td-cost">订阅费({{ currency }})</th>
+                    <th class="td-cost">成本({{ currency }})</th>
+                    <th class="td-cost">总成本({{ currency }})</th>
+                    <th>利润({{ currency }})</th>
+                    <th>利润率</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="o in products"table-repeat-directive>
+                    <td class="smart-form">
+                        <label class="checkbox"><input type="checkbox" name="checkbox" ng-click="selectProduct($event, $index)" ng-model="o.selected"></label>
+                    </td>
+                    <td>{{ $index+1 }}</td>
+                    <td><a ui-sref="index.productDetail.settlement({productId: o.product.id, settlementId: settlementId})"> {{ o.product.SellerSKU }}</a></td>
+                    <td><img src="{{ host }}{{ o.product.Image }}"></td>
+                    <td>{{ o.product.TitleCn}}</td>
+                    <td>{{ o.Quantity}}</td>
+                    <td class="td-sale">{{ o.sales }}</td>
+                    <td class="td-sale"> {{ o.refund }}</td>
+                    <td class="td-sale">{{o.other_fee}}</td>
+                    <td class="td-sale">{{o.othertrade}}</td>
+                    <td class="td-sale"> {{ o.income }}</td>
+                    <td class="td-cost">{{ o.advertising_fee }}</td>
+                    <td class="td-cost">{{ o.storage_fee }}</td>
+                    <td class="td-cost">{{o.subscription_fee}}</td>
+                    <th class="td-cost">{{o.cost}}</th>
+                    <th class="td-cost">{{o.total_cost}}</th>
+                    <td>{{ o.profit }}</td>
+                    <td>{{ o.profit_rate }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+</div>  <!-- product summary table -->
+<div class="col-md-12">
+    <!-- general form elements -->
+    <div class="box box-primary">
+        <div class="box-header with-border" onclick="$(this).next().toggle()">
+            <h3 class="box-title">所有订单（{{ orders.length}}）</h3>
+            <i class="fa fa-refresh fa-spin" ng-if="orderLoading"></i>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="display: none;overflow-x: auto;">
+            <table id="orderTable" class="table table-bordered table-hover table-lg" class="table-lg">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>订单号</th>
+                        <th ng-if="isSettlement">SKU</th>
+                        <th>数量</th>
+                        <th class="td-sale">商品单价({{currency}})</th>
+                        <th class="td-sale">商品价格({{ currency }})</th>
+                        <th class="td-sale">促销返点({{ currency }})</th>
+                        <th class="td-sale">亚马逊收取({{ currency }})</th>
+                        <th class="td-sale">其他({{ currency }})</th>
+                        <th class="td-sale">实收({{ currency }})</th>
+                        <th class="td-cost">广告费({{ currency }})</th>
+                        <th class="td-cost">仓储费({{ currency }})</th>
+                        <th class="td-cost">订阅费({{currency}})</th>
+                        <td class="td-cost">单位成本({{currency}})</td>
+                        <th class="td-cost">总成本({{currency}})</th>
+                        <th>利润({{currency}})</th>
+                        <th>利润率</th>
+                        <th>操作</th>
+                    </tr>
+                    <tr>
+                        <th>{{ orderSummary.PostedDate }}</th>
+                        <th>{{ orderSummary.AmazonOrderId}}</th>
+                        <th ng-if="isSettlement"></th>
+                        <th>{{ orderSummary.Quantity }}</th>
+                        <th class="td-sale">{{orderSummary.UnitPrice}}</th>
+                        <th class="td-sale">{{orderSummary.Principal}}</th>
+                        <th class="td-sale">{{ orderSummary.Promotion }}</th>
+                        <th class="td-sale">{{ orderSummary.Fee }}</th>
+                        <th class="td-sale"> {{ orderSummary.OtherPrice }}</th>
+                        <th class="td-sale">{{orderSummary.income}}</th>
+                        <th class="td-cost">{{ orderSummary.advertising_fee }}</th>
+                        <th class="td-cost">{{ orderSummary.storage_fee }}</th>
+                        <th class="td-cost">{{orderSummary.subscription_fee}}</th>
+                        <th class="td-cost">{{orderSummary.cost}}</th>
+                        <th class="td-cost">{{orderSummary.total_cost}}</th>
+                        <th> {{ orderSummary.profit }}</th>
+                        <th>{{orderSummary.profit_rate}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="o in orders" table-repeat-directive>
+                    <td>{{ o.PostedDate }}</td>
+                    <td>{{ o.AmazonOrderId}}</td>
+                    <td ng-if="isSettlement">{{ o.SellerSKU }}</td>
+                    <td>{{ o.Quantity }}</td>
+                    <td class="td-sale">{{ o.UnitPrice }}</td>
+                    <td class="td-sale">{{o.Principal}}</td>
+                    <td class="td-sale">{{ o.Promotion }}</td>
+                    <td class="td-sale"> {{ o.Fee }}</td>
+                    <td class="td-sale"> {{ o.OtherPrice }}</td>
+                    <td class="td-sale">{{o.income}}</td>
+                    <td class="td-cost">{{o.advertising_fee}}</td>
+                    <td class="td-cost">{{o.storage_fee}}</td>
+                    <td class="td-cost">{{o.subscription_fee}}</td>
+                    <td class="td-cost">
+                        <input ng-if="o.isEdit" class="md" ng-model="o.cost_new">
+                        <span ng-if="!o.isEdit">{{o.cost}}</span>
+                    </td>
+                    <td class="td-cost">{{o.total_cost}}</td>
+                    <td> {{ o.profit }}</td>
+                    <td>{{o.profit_rate}}</td>
+                    <td>
+                        <a class="fa fa-pencil" ng-click="o.cost_new=o.cost;o.isEdit=true" ng-if="!o.isEdit" title="修改单位成本"></a>
+                        <a class="fa fa-check text-green" ng-click="saveOrderCost($index, o.id )" ng-if="o.isEdit" title="保存"></a>
+                        <a class="fa fa-close text-red" ng-click="o.isEdit=false" ng-if="o.isEdit" title="取消"></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+</div>  <!-- order table -->
+<div class="col-md-12">
+    <!-- general form elements -->
+    <div class="box box-primary">
+        <div class="box-header with-border" onclick="$(this).next().toggle()">
+            <h3 class="box-title">退货（{{ refunds.length}}）</h3>
+            <i class="fa fa-refresh fa-spin" ng-if="refundLoading"></i>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="display: none;overflow-x: auto;">
+            <table id="refundTable" class="table table-bordered table-hover table-lg">
+                <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>订单号</th>
+                    <th ng-if="isSettlement">SKU</th>
+                    <th>数量</th>
+                    <th class="td-sale">商品单价({{currency}})</th>
+                    <th class="td-sale">商品价格({{ currency }})</th>
+                    <th class="td-sale">促销返点({{ currency }})</th>
+                    <th class="td-sale">亚马逊收取({{ currency }})</th>
+                    <th class="td-sale">其他({{ currency }})</th>
+                    <th class="td-sale">实收({{ currency }})</th>
+                    <td class="td-cost">单位成本({{currency}})</td>
+                    <th class="td-cost">总成本({{currency}})</th>
+                    <th>利润({{currency}})</th>
+                    <th>利润率</th>
+                    <th>操作</th>
+                </tr>
+                <tr >
+                    <th>{{ refundSummary.PostedDate }}</th>
+                    <th>{{ refundSummary.AmazonOrderId}}</th>
+                    <th ng-if="isSettlement"></th>
+                    <th>{{ refundSummary.Quantity }}</th>
+                    <th class="td-sale"></th>
+                    <th class="td-sale">{{refundSummary.Principal}}</th>
+                    <th class="td-sale">{{ refundSummary.Promotion }}</th>
+                    <th class="td-sale"> {{ refundSummary.Fee }}</th>
+                    <th class="td-sale"> {{ refundSummary.OtherPrice }}</th>
+                    <th class="td-sale">{{refundSummary.income}}</th>
+                    <th class="td-cost">{{refundSummary.cost}}</th>
+                    <th class="td-cost">{{refundSummary.total_cost}}</th>
+                    <th> {{ refundSummary.profit }}</th>
+                    <th> {{ refundSummary.profit_rate }}</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="o in refunds" table-repeat-directive>
+                    <td>{{ o.PostedDate }}</td>
+                    <td>{{ o.AmazonOrderId}}</td>
+                    <td ng-if="isSettlement">{{ o.SellerSKU }}</td>
+                    <td>{{ o.Quantity }}</td>
+                    <td class="td-sale">{{ o.UnitPrice }}</td>
+                    <td class="td-sale">{{o.Principal}}</td>
+                    <td class="td-sale">{{ o.Promotion }}</td>
+                    <td class="td-sale"> {{ o.Fee}}</td>
+                    <td class="td-sale">{{ o.OtherPrice }}</td>
+                    <td class="td-sale">{{o.income}}</td>
+                    <td class="td-cost">
+                        <input ng-if="o.isEdit" class="md" ng-model="o.cost_new">
+                        <span ng-if="!o.isEdit">{{o.cost}}</span>
+                    </td>
+                    <td class="td-cost">{{o.total_cost}}</td>
+                    <td> {{ o.profit }}</td>
+                    <td>{{o.profit_rate}}</td>
+                    <td>
+                        <a class="fa fa-pencil" ng-click="o.cost_new=o.cost;o.isEdit=true" ng-if="!o.isEdit" title="修改单位成本"></a>
+                        <a class="fa fa-check text-green" ng-click="saveRefundCost($index, o.id )" ng-if="o.isEdit" title="保存"></a>
+                        <a class="fa fa-close text-red" ng-click="o.isEdit=false" ng-if="o.isEdit" title="取消"></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+</div>  <!-- refund table -->
+<div class="col-md-12">
+    <!-- general form elements -->
+    <div class="box box-primary">
+        <div class="box-header with-border" onclick="$(this).next().toggle()">
+            <h3 class="box-title">弃置/移除（{{ removals.length}}）</h3>
+            <i class="fa fa-refresh fa-spin" ng-if="removalLoading"></i>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="display: none;overflow-x: auto;">
+            <!--<input type="file" file-model="fileToUpload" accept="text/plain" placeholder="上传移除报告">-->
+            <table id="removalTable" class="table table-bordered table-hover table-lg">
+                <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>订单号</th>
+                    <th ng-if="isSettlement">SKU</th>
+                    <th>原因</th>
+                    <th>数量</th>
+                    <th class="td-sale">弃置费({{ currency }})</th>
+                    <th class="td-cost">单位成本({{ currency }})</th>
+                    <th class="td-cost">总成本({{ currency }})</th>
+                    <th>利润({{ currency }})</th>
+                    <th>操作</th>
+                </tr>
+                <!--
+                <tr>
+                    <th>{{ removalSummary.UpdateDate }}</th>
+                    <th>{{ removalSummary.OrderId}}</th>
+                    <th ng-if="isSettlement"></th>
+                    <th ng-if="isSettlement"></th>
+                    <th>{{ removalSummary.Quantity }}</th>
+                    <th class="td-sale"> {{ removalSummary.Fee }}</th>
+                    <th class="td-cost"> {{ removalSummary.cost }}</th>
+                    <th class="td-cost"> {{ removalSummary.total_cost }}</th>
+                    <th>{{ removalSummary.profit }}</th>
+                    <th></th>
+                </tr>
+                -->
+                </thead>
+                <tbody>
+                <tr ng-repeat="o in removals"table-repeat-directive>
+                    <td>{{ o.UpdateDate }}</td>
+                    <td>{{ o.OrderId}}</td>
+                    <td ng-if="isSettlement">{{ o.SellerSKU }}</td>
+                    <td>{{ o.OrderType }}-{{o.Disposition}}</td>
+                    <td>{{ o.Quantity }}</td>
+                    <td class="td-sale"> {{ o.Fee }}</td>
+                    <td class="td-cost">
+                        <input ng-if="o.isEdit" class="md" ng-model="o.cost_new">
+                        <span ng-if="!o.isEdit">{{o.cost}}</span>
+                    </td>
+                    <td class="td-cost"> {{ o.total_cost }}</td>
+                    <td>{{ o.profit }}</td>
+                    <td>
+                        <a class="fa fa-pencil" ng-click="o.cost_new=o.cost;o.isEdit=true" ng-if="!o.isEdit" title="修改单位成本"></a>
+                        <a class="fa fa-check text-green" ng-click="saveRemovalCost($index, o.id )" ng-if="o.isEdit" title="保存"></a>
+                        <a class="fa fa-close text-red" ng-click="o.isEdit=false" ng-if="o.isEdit" title="取消"></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+</div>  <!-- removal table -->
+<div class="col-md-12">
+    <!-- general form elements -->
+    <div class="box box-primary">
+        <div class="box-header with-border" onclick="$(this).next().toggle()">
+            <h3 class="box-title">赔偿（{{ losts.length}}）</h3>
+            <i class="fa fa-refresh fa-spin" ng-if="lostLoading"></i>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="display: none;overflow-x: auto;">
+            <table id="lostTable" class="table table-bordered table-hover table-lg">
+                <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>订单号</th>
+                    <th>赔偿编号</th>
+                    <th ng-if="isSettlement">SKU</th>
+                    <th>原因</th>
+                    <th>数量</th>
+                    <th class="td-sale">商品单价({{currency}})</th>
+                    <th class="td-sale">赔偿费用({{ currency }})</th>
+                    <th class="td-cost">单位成本({{ currency }})</th>
+                    <th class="td-cost">总成本({{currency}})</th>
+                    <th>利润({{ currency }})</th>
+                    <th>利润率</th>
+                    <th>操作</th>
+                </tr>
+                <!--
+                <tr>
+                    <th></th>
+                    <th>{{lostSummary.AmazonOrderId}}</th>
+                    <th></th>
+                    <th ng-if="isSettlement"></th>
+                    <th></th>
+                    <th>{{ lostSummary.Quantity }}</th>
+                    <th class="td-sale"></th>
+                    <th class="td-sale"> {{ lostSummary.income }}</th>
+                    <th class="td-cost"> {{ lostSummary.cost }}</th>
+                    <th class="td-cost"> {{ lostSummary.total_cost }}</th>
+                    <th>{{ lostSummary.profit }}</th>
+                    <th>{{ lostSummary.profit_rate }}</th>
+                    <th></th>
+                </tr>
+                -->
+                </thead>
+                <tbody>
+                <tr ng-repeat="o in losts"table-repeat-directive>
+                    <td>{{ o.PostedDate }}</td>
+                    <td>{{ o.AmazonOrderId}}</td>
+                    <td>{{ o.TransactionID }}</td>
+                    <td ng-if="isSettlement">{{ o.SellerSKU }}</td>
+                    <td>{{ o.TransactionType }}</td>
+                    <td>{{ o.Quantity }}</td>
+                    <td class="td-sale">{{ o.UnitPrice }}</td>
+                    <td class="td-sale"> {{ o.income }}</td>
+                    <td class="td-cost">
+                        <input ng-if="o.isEdit" class="md" ng-model="o.cost_new">
+                        <span ng-if="!o.isEdit">{{o.cost}}</span>
+                    </td>
+                    <td class="td-cost"> {{ o.total_cost }}</td>
+                    <td>{{ o.profit }}</td>
+                    <td>{{ o.profit_rate }}</td>
+                    <td>
+                        <a class="fa fa-pencil" ng-click="o.cost_new=o.cost;o.isEdit=true" ng-if="!o.isEdit" title="修改单位成本"></a>
+                        <a class="fa fa-check text-green" ng-click="saveLostCost($index, o.id )" ng-if="o.isEdit" title="保存"></a>
+                        <a class="fa fa-close text-red" ng-click="o.isEdit=false" ng-if="o.isEdit" title="取消"></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+</div>  <!-- lost table -->
