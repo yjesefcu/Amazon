@@ -15,11 +15,8 @@
             <div class="box box-primary">
                 <div class="box-header with-border">
                     <h3 class="box-title">移库记录
-                        <!--
                         <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipOversea({by: 'sea'})">添加空运货件</a>
                         <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipOversea({by: 'air'})">添加海运货件</a>
-                        -->
-                        <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipment()">发货</a>
                     </h3>
                 </div>
                 <!-- /.box-header -->
@@ -29,7 +26,7 @@
                         <tr>
                             <th>序号</th>
                             <th>货件号</th>
-                            <th>创建时间</th>
+                            <th>运送时间</th>
                             <th>总运费</th>
                             <th>总关税</th>
                             <th>操作</th>
@@ -39,10 +36,10 @@
                         <tbody>
                         <tr ng-repeat="os in shipments"table-repeat-directive>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ os.code }}</td>
-                            <td>{{ os.create_time }}</td>
-                            <td>{{ os.traffic_fee }}</td>
-                            <td>{{ os.tax_fee }}</td>
+                            <td><a ui-sref="index.shipmentDetail({id: os.id})">{{ os.ShipmentId }}</a></td>
+                            <td>{{ os.ship_date }}</td>
+                            <td>{{ os.total_freight }}</td>
+                            <td>{{ os.duty }}</td>
                             <td>
                                 <a class="fa fa-trash-o text-red" title="删除该记录" ng-click="deleteShipment($index,os.id)"></a>
                             </td>

@@ -21,6 +21,7 @@ class OrderStatus(models.Model):
     permissions = models.CharField(max_length=100, null=True, blank=True)  # 当处于这个状态时，需要的权限是什么
 
 
+
 class Contract(models.Model):
     # 采购单合同
     contract_number = models.CharField(max_length=100)    # 合同号

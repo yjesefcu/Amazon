@@ -48,9 +48,13 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
             url: 'supply/create',
             templateUrl: '/static/templates/shipment/supply-create.html'
         })
+        .state('index.createShipment', {
+            url: 'shipment/create',
+            templateUrl: '/static/templates/shipment/shipment_create.html'
+        })
         .state('index.createShipOversea', {
             url: 'shipment/create/:by',
-            templateUrl: '/static/templates/shipment/outbound_create.html'
+            templateUrl: '/static/templates/shipment/shipment_create.html'
         })
         .state('index.shipmentDetail', {
             url: 'shipment/:id',

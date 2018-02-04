@@ -19,11 +19,28 @@
                         <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >货件Id</label>
-                                <input type="text" class="form-control" placeholder="亚马逊货件Id" ng-model="formData.ShipmentId">
+                                <input type="text" class="form-control" placeholder="亚马逊货件Id" ng-model="formData.code">
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
-                                <input ng-model="supply.product" hidden>
-                                <label>发货日期</label>
+                                <label >物流公司</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.company">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >运单号</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.tracking_number">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >总运费({{ currency }})</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.traffic_fee">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >总关税({{ currency }})</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.tax_fee">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <input ng-model="formData.product" hidden>
+                                <label>创建时间</label>
+                                <!--
                                 <div class="datepicker">
                                     <div class="datepicker"
                                          date-format="yyyy-MM-dd"
@@ -32,26 +49,16 @@
                                         <input ng-model="formData.ship_date" type="text" placeholder="请选择发货日期" class="angular-datepicker-input form-control" required />
                                     </div>
                                 </div>
+                                -->
+                                <label class="form-control">{{ formData.create_time }}</label>
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >物流公司</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="formData.logistics_company">
+                                <label >总数量</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="formData.count">
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >运单号</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="formData.logistics_id">
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >总运费({{ currency }})</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="formData.total_freight">
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >总关税({{ currency }})</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="formData.duty">
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >备注</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="formData.comment">
+                                <label>箱子数量</label>
+                                <label class="form-control">{{ formData.box_count }}</label>
                             </div>
                         </div>
                     </div>
@@ -67,52 +74,64 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="box box-primary">
-                <!-- /.box-header -->
+                <div class="box-header with-border">
+                    <h3 class="box-title">货运详情
+                        <button class="btn btn-primary" ng-click="addBox();">增加包装箱</button>
+                    </h3>
+                </div>
                 <div class="box-body" style="overflow-y: auto;">
                     <h4 style="color: red;" ng-show="error_msg">{{ error_msg }}</h4>
-                    <table class="table table-bordered table-hover" style="min-width: 1100px;">
+                    <table class="table table-bordered table-hover">
                         <thead>
                         <tr>
-                            <th colspan="5" class="dark-border">基本信息</th>
-                            <th colspan="5" class="dark-border">外包装</th>
-                            <th colspan="1" class="dark-border">成本</th>
-                            <th class="dark-border">操作</th>
-                        </tr>
-                        <tr>
-                            <th>SKU</th>
-                            <th>数量</th>
-                            <th>库存</th>
-                            <th>运费<br>{{ currentcy }}</th>
-                            <th>关税</th>
-                            <th>长<br>cm</th>
-                            <th>宽<br>cm</th>
-                            <th>高<br>cm</th>
-                            <th>实际重量<br>kg</th>
-                            <th>体积重<br>kg</th>
-                            <th>单位成本<br>{{currency}}</th>
-                            <th>操作</th>
+                            <th style="width: 150px;">SKU</th>
+                            <th style="width: 200px;">名称</th>
+                            <th style="width: 80px;">数量</th>
+                            <th ng-repeat="box in boxs">箱子{{ $index+1 }}</th>
+                            <th>已装箱数量</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="p in products">
+                        <tr ng-repeat="p in items">
                             <td>{{p.SellerSKU}}</td>
-                            <td>{{p.QuantityShipped}}</td>
-                            <td>{{ p.inventory }}</td>
-                            <td>{{p.total_freight}}</td>
-                            <td>{{p.duty}}</td>
-                            <td>{{p.length}}</td>
-                            <td>{{p.width}}</td>
-                            <td>{{p.height}}</td>
-                            <td>{{p.weight}}</td>
-                            <td>{{p.volume_weight}}</td>
-                            <td><input ng-if="p.isEdit" ng-model="p.unit_cost_new" class="md">
-                                <span ng-if="!p.isEdit">{{p.unit_cost}}</span></td>
-                            <td>
-                                <a class="fa fa-pencil" ng-click="p.unit_cost_new=p.unit_cost;p.isEdit=true;" ng-if="!p.isEdit" title="修改单位成本"></a>
-                                <a class="fa fa-check text-green" ng-click="p.unit_cost=p.unit_cost_new;saveItem($index, p.id)" ng-if="p.isEdit" title="保存"></a>
-                                <a class="fa fa-close text-red" ng-click="p.isEdit=false;" ng-if="p.isEdit" title="取消"></a>
-                                <a class="fa fa-trash-o text-red" title="删除该记录" ng-click="deleteItem($index,p.id)"></a>
+                            <td>{{ p.product.TitleCn}}</td>
+                            <td>{{ p.count }}</td>
+                            <td ng-repeat="box in boxs"><input ng-model="box.products[p.id]"></td>
+                            <td>{{ p.boxed_count }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">总数量</td>
+                            <td>{{ formData.count }}</td>
+                            <td ng-repeat="box in boxs">{{ box.count }}</td>
+                            <td>{{ formData.boxed_count }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">包装箱重量(ib.)</td>
+                            <td ng-repeat="box in boxs"><input ng-model="box.itn_weight"></td>
+                            <td>{{ formData.total_itn_weight }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">包装箱尺寸(长*宽*高)IN.</td>
+                            <td ng-repeat="box in boxs">
+                                <input ng-model="box.itn_length" style="width: 30%">
+                                <input ng-model="box.itn_width" style="width: 30%">
+                                <input ng-model="box.itn_height" style="width: 30%">
                             </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">包装箱重量(kg)</td>
+                            <td ng-repeat="box in boxs"><input ng-model="box.weight"></td>
+                            <td>{{ formData.total_weight }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">包装箱尺寸(长*宽*高)cm</td>
+                            <td ng-repeat="box in boxs">
+                                <input ng-model="box.length" style="width: 30%">
+                                <input ng-model="box.width" style="width: 30%">
+                                <input ng-model="box.height" style="width: 30%">
+                            </td>
+                            <td></td>
                         </tr>
                         </tbody>
                     </table>
@@ -122,7 +141,7 @@
     </div>
     <div class="row">
         <div class="col col-md-12">
-            <button ng-click="deleteShipment()" class="btn btn-danger">删除</button>
+            <button ng-click="update()" class="btn btn-primary">提交</button>
         </div>
     </div>
 </section>

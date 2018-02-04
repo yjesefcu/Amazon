@@ -36,8 +36,8 @@ html,body,body>.wrapper{
 
 table input{
   line-height: 24px;
-  border: none;
-  outline: none;
+  border: #eee 1px solid;
+  /*outline: none;*/
 }
 table textarea{
   border: none;
@@ -76,4 +76,7 @@ table tr.no-hover:hover{
 }
 .error{
   color: red;
+}
+table input{
+  width: 100%;
 }

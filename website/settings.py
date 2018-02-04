@@ -51,6 +51,7 @@ INSTALLED_APPS = (
     'my_auth',
     'rolepermissions',
     'purchasing',
+    'shipment',
 )
 
 
