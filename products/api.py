@@ -301,7 +301,7 @@ class SettlementDbHandler(object):
             if count > 1:
                 logger.info('SettleOrderItem return more than one: %s', data['OrderItemId'])
                 for o in order_list:
-                    if (-o.Principal) == to_float(data['Principal']):
+                    if (-o.Principal) == to_float(data.get('Principal', 0)):
                         exist = True
                         order = o
                         break
@@ -317,7 +317,11 @@ class SettlementDbHandler(object):
 
         # 找到对应的订单信息
         data['income'] = to_float(data.get('Principal', 0)) + to_float(data.get('Promotion')) + to_float(data.get('OtherPrice')) + to_float(data.get('Fee'))
-        return RefundItem.objects.create(**data)
+        refund = RefundItem.objects.create(**data)
+        if order:
+            order.refund_order = refund
+            order.save()
+        return refund
 
     def _get_order_item_quantity_from_amazon(self, order_item_id, amazon_order_id):
         # 从亚马逊请求订单数量

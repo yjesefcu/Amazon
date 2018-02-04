@@ -529,6 +529,7 @@ class SettleOrderItem(models.Model):
     profit_rate = models.FloatField(null=True, blank=True)
 
     is_total = models.BooleanField(default=False)      # 是否是汇总项
+    refund_order = models.ForeignKey(RefundItem, null=True, blank=True)     # 关联的退款订单
 
     class Meta:
         ordering = ['-PostedDate']
