@@ -61,5 +61,7 @@ def get_role(request):
         roles.append('finance')
     if has_role(user, 'godown_manager'):
         roles.append('godown_manager')
+    if has_role(user, 'operator'):
+        roles.append('operator')
     result['role'] = roles[0]
     return HttpResponse(json.dumps(result), content_type='application/json')

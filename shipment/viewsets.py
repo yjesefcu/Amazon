@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from django_filters.rest_framework import DjangoFilterBackend
+from purchasing.models import OrderStatus
 from models import *
 from serializer import *
 
@@ -47,7 +48,70 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
             count += int(item_data.get('count'))
         order.count = count
         order.product_count = len(items_data)
+        order.status_id = OrderStatus.WaitForPack
         order.save()
+        serializer = self.get_serializer(order)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        order = self.get_object()
+        data = request.data
+        boxs = list()
+
+        product_boxed = dict()
+        total_int_weight = 0
+        total_weight = 0
+        for box_data in data.get('boxs'):
+            if not box_data.get('products', None):
+                continue
+            if box_data.get('id'):
+                box = ShipmentBox.objects.get(pk=box_data.get('id'))
+            else:
+                box = ShipmentBox.objects.create(order=order)
+            BoxProductRelations.objects.filter(box=box).delete()
+            box_count = 0
+            for order_item_id, count in box_data['products'].items():
+                if not count:
+                    continue
+                count = int(count)
+                BoxProductRelations.objects.create(order=order, box=box, order_item_id=order_item_id, count=count)
+                box_count += count
+                if product_boxed.get(order_item_id):
+                    product_boxed[order_item_id] += count
+                else:
+                    product_boxed[order_item_id] = count
+            box.products = json.dumps(box_data.get('products'))
+            del box_data['products']
+            box.count = box_count
+            for field,value in box_data.items():
+                setattr(box, field, value)
+            box.save()
+            boxs.append(box)
+            # 计算总重量
+            total_int_weight += to_float(box_data.get('itn_weight'))
+            total_weight += to_float(box_data.get('weight'))
+        # 更新每个产品的实际发货数量
+        total_count = 0
+        for order_item_id, count in product_boxed.items():
+            order_item = ShipmentOrderItem.objects.get(pk=order_item_id)
+            order_item.boxed_count = count
+            order_item.save()
+            total_count += count
+        if data.get('items', None) is not None:
+            del data['items']
+        if data.get('boxs', None) is not None:
+            del data['boxs']
+        del data['status']
+
+        data['boxed_count'] = total_count
+        data['total_itn_weight'] = total_int_weight
+        data['total_weight'] = total_weight
+        data['box_count'] = len(boxs)
+        serializer = self.get_serializer(order, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        # order.save()
         serializer = self.get_serializer(order)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

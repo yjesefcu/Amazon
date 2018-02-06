@@ -2,11 +2,6 @@
     <h1>
         货件信息
     </h1>
-    <ol class="breadcrumb">
-        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a href="#">Forms</a></li>
-        <li class="active">Advanced Elements</li>
-    </ol>
 </section>
 <section class="content" ng-controller="ShipmentCtrl">
     <div class="row">
@@ -19,7 +14,8 @@
                         <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipOversea({by: 'sea'})">添加空运货件</a>
                         <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipOversea({by: 'air'})">添加海运货件</a>
                         -->
-                        <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipment()">发货</a>
+                        <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipment()"
+                           ng-if="userRole === 'operator'">发货</a>
                     </h3>
                 </div>
                 <!-- /.box-header -->
@@ -32,18 +28,18 @@
                             <th>创建时间</th>
                             <th>总运费</th>
                             <th>总关税</th>
-                            <th>操作</th>
+                            <th ng-if="userRole==='godown_manager'">操作</th>
                             <!--<th>操作</th>-->
                         </tr>
                         </thead>
                         <tbody>
                         <tr ng-repeat="os in shipments"table-repeat-directive>
-                            <td>{{ $index + 1 }}</td>
+                            <td><a ui-sref="index.shipmentDetail({id: os.id})">{{ $index + 1 }}</a></td>
                             <td>{{ os.code }}</td>
                             <td>{{ os.create_time }}</td>
                             <td>{{ os.traffic_fee }}</td>
                             <td>{{ os.tax_fee }}</td>
-                            <td>
+                            <td ng-if="userRole === 'godown_manager'">
                                 <a class="fa fa-trash-o text-red" title="删除该记录" ng-click="deleteShipment($index,os.id)"></a>
                             </td>
                         </tr>

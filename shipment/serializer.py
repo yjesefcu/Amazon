@@ -2,6 +2,7 @@ __author__ = 'liucaiyun'
 import json
 from rest_framework import serializers
 from products.serializer import ProductSerializer
+from purchasing.serializer import OrderStatusSerializer
 from models import *
 
 
@@ -34,6 +35,7 @@ class ShipmentOrderSerializer(serializers.ModelSerializer):
 
     create_time = DateTimeFormat()
     items = ShipmentOrderItemSerializer(many=True)
+    status = OrderStatusSerializer()
 
     class Meta:
         model = ShipmentOrder

@@ -91,7 +91,7 @@
                         <span>采购单管理</span>
                     </a>
                 </li>
-                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/shipment')==0 }" ng-if="userRole==='admin'">
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/shipment')==0 }" ng-if="userRole==='admin' || userRole==='operator' || userRole==='godown_manager'">
                     <a ui-sref="index.shipment" ng-click="currentUrl='/shipment'">
                         <i class="fa fa-truck"></i> <span>移库货件</span>
                     </a>

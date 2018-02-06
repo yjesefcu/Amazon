@@ -144,7 +144,8 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
     };
     
     $scope.update = function () {   // 更新箱子信息
-        $http.post('/api/shipments/' + id + '/boxs/', $scope.boxs).then(function (result) {
+        var data = $.extend({}, $scope.formData, {'boxs': $scope.boxs});
+        $http.patch('/api/shipments/' + id, data).then(function (result) {
             getShipment(id);
         });
     };
