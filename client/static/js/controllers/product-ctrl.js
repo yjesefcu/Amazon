@@ -102,8 +102,8 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
             $scope.formData = result.data;
             $scope.productIcon = serviceFactory.mediaPath(result.data.Image);
         });
-        getSupplies($scope.productId);
-        getShipments($scope.productId);
+        // getSupplies($scope.productId);
+        // getShipments($scope.productId);
         getSettlements($scope.productId);
         getPurchasingOrders($scope.productId);
     }

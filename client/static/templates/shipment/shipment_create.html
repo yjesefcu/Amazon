@@ -36,7 +36,9 @@
                                             <li><a style="color:#333;">共{{ searchResults.length }}个商品</a></li>
                                             <li role="presentation" class="divider"></li>
                                             <li ng-repeat="tmp in searchResults">
-                                                <a role="menuitem" tabindex="-1" href="javascript:void(0)" ng-click="chooseProduct(p, tmp)">{{ tmp.SellerSKU }}</a>
+                                                <a role="menuitem" tabindex="-1" href="javascript:void(0)" ng-click="chooseProduct(p, tmp)">
+                                                {{ tmp.SellerSKU }}<span style="margin-left:20px;color:#999;">{{ tmp.TitleCn }}</span>
+                                                </a>
                                             </li>
                                         </ul>
                                     </div>
