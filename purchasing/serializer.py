@@ -1,3 +1,4 @@
+#-*- coding:utf-8 -*-
 __author__ = 'liucaiyun'
 from rest_framework import serializers
 from products.serializer import ProductSerializer
@@ -12,6 +13,19 @@ class DateTimeFormat(serializers.DateTimeField):
         return value.strftime('%Y-%m-%d %H:%M')
 
 
+class RoleNameSerializer(serializers.CharField):
+
+    def to_representation(self, value):
+        if value == 'finance':
+            return u'财务'
+        if value == 'purchasing_agent':
+            return u'采购员'
+        if value == 'godown_manager':
+            return u'仓库管理员'
+        if value == 'operator':
+            return '运营人员'
+
+
 class ContractSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -20,6 +34,7 @@ class ContractSerializer(serializers.ModelSerializer):
 
 
 class OrderStatusSerializer(serializers.ModelSerializer):
+    role_name = RoleNameSerializer(source='role')
 
     class Meta:
         model = OrderStatus

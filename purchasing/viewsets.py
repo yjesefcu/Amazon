@@ -46,6 +46,8 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         for d in orders_data:
             product, created = Product.objects.get_or_create(MarketplaceId='ATVPDKIKX0DER', SellerSKU=d.get('SellerSKU'))
             total_price = int(d.get('count')) * float(d.get('price'))
+            if 'product' in d:
+                del d['product']
             PurchasingOrder.objects.create(contract=contract, product=product, create_time=create_time,
                                            status_id=OrderStatus.WaitForDepositPayed, received_count=0, total_price=total_price, **d)
         return Response({}, status=status.HTTP_201_CREATED)

@@ -30,17 +30,25 @@
                                 <label >物流说明：</label><span>{{order.contract.traffic_comment}}</span>
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >经办人：</label><span>order.contract.operator</span>
+                                <label >经办人：</label><span>{{ order.contract.operator }}</span>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-sm-12">
-                                <h4>采购内容：</h4>
+                                <h4>采购商品：</h4>
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >商品SKU：</label><span>{{order.SellerSKU}}</span>
                             </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >图片：</label><img ng-src="{{order.product.Image}}">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >商品描述：</label><span>{{order.product.TitleCn}}</span>
+                            </div>
+                        </div>
+                        <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >采购时间：</label><span>{{order.create_time}}</span>
                             </div>
@@ -61,6 +69,9 @@
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >采购单状态：</label><span>{{order.status.name}}</span>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >当前处理人：</label><span>{{order.status.role_name}}</span>
                             </div>
                         </div>
                     </div>
@@ -120,7 +131,7 @@
             <button class="btn btn-primary" ng-click="update({status_id: 3})">货物生产已完成，提交财务打尾款</button>
         </div>
         <div class="col-sm-12" ng-if="order.status.id === 3 && userRole===order.status.role">
-            <input type="text" placeholder="请输入实际支出尾款：{{order.final_payment_payed}}({{currency}}" class="col-sm-4" ng-model="order.final_payment_payed">
+            <input type="text" placeholder="请输入实际支出尾款：{{order.final_payment_payed}}({{currency}})" class="col-sm-4" ng-model="order.final_payment_payed">
             <button ng-click="update({final_payment_payed: order.final_payment_payed, status_id: 4})">确认尾款已打款</button>
         </div>
         <div class="col-sm-12" ng-if="order.status.id === 4 && userRole===order.status.role">

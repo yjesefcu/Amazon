@@ -25,6 +25,43 @@ var Role = {
 app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope, $state) {
     $scope.orders = [];
     $scope.contract = {};
+    $scope.searchResults = [];
+    $scope.searchResultsPosition = {};
+
+    function getProducts () {
+        $http.get("/api/products").then(function (result) {
+            $scope.products = result.data;
+        });
+    }
+
+    $scope.focusSearchInput = function ($event, sku) {
+        var offset = $($event.target).offset();
+        $scope.searchResultsPosition = {x: offset.left+'px', y: (offset.top+24)+'px'};
+        $scope.skuSearch(sku);
+    };
+
+    $scope.skuSearch = function (sku) {     // 商品搜索
+        if (!sku) {
+            $scope.searchResults = $scope.products;
+            return;
+        }
+        var results = [];
+        sku = sku.toLowerCase();
+        $scope.products.forEach(function (p) {
+           if (p.SellerSKU.toLowerCase().indexOf(sku) >= 0) {
+               results.push(p);
+           }
+        });
+        $scope.searchResults = results;
+    };
+
+    $scope.chooseProduct = function (item, product) {
+
+        item.SellerSKU = product.SellerSKU;
+        item.product = product;
+    };
+
+    getProducts();
 
     $scope.addOrderItem = function () {
         $scope.orders.push({});

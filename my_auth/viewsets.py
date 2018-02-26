@@ -24,7 +24,7 @@ def get_role_name(role):
     if role == 'finance':
         return u'财务'
     if role == 'godown_manager':
-        return u'入库管理员'
+        return u'仓库管理员'
 
 
 class UserViewSet(NestedViewSetMixin, ModelViewSet):
@@ -34,7 +34,13 @@ class UserViewSet(NestedViewSetMixin, ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        user = User.objects.create_user(data.get('username'), '', data.get('password'))
+        # 如果之前已经存在username的用户，则需要将is_active置为True
+        try:
+            user = User.objects.get(username=data.get('username'))
+            user.is_active = True
+            user.set_password(data.get('password'))
+        except User.DoesNotExist, ex:
+            user = User.objects.create_user(data.get('username'), '', data.get('password'))
         user.is_staff = True
         user.first_name = data.get('first_name')
         user.last_name = get_role_name(data.get('role'))

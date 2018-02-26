@@ -6,6 +6,14 @@ from purchasing.serializer import OrderStatusSerializer
 from models import *
 
 
+class FloatRoundField(serializers.FloatField):
+
+    def to_representation(self, value):
+        if not value:
+            return value
+        return round(float(value), 2)
+
+
 class DateTimeFormat(serializers.DateTimeField):
 
     def to_representation(self, value):
@@ -24,7 +32,9 @@ class JSONField(serializers.DictField):
 
 class ShipmentOrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
-
+    unit_weight = FloatRoundField()
+    traffic_fee = FloatRoundField()
+    tax_fee = FloatRoundField()
 
     class Meta:
         model = ShipmentOrderItem

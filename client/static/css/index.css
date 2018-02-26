@@ -80,3 +80,10 @@ table tr.no-hover:hover{
 table input{
   width: 100%;
 }
+.result-dropdown{
+  position: fixed;
+  top:300px;
+  left:500px;
+  max-height: 250px;
+  overflow-y: auto;
+}

@@ -33,11 +33,52 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
     $scope.formData = {MarketplaceId: $rootScope.MarketplaceId};
     $scope.items = [];
     $scope.error_msg = '';
-    $scope.volume_args = 5000;
+    $scope.volume_args_choice = [5000, 6000];
     $scope.boxs = [];
+    $scope.editDisable = false;
+    $scope.products = [];
+    $scope.searchResults = [];
+    $scope.searchResultsPosition = {};
+
     $scope.addProductRow = function () {
         $scope.items.push({});
     };
+
+    function getProducts () {
+        $http.get("/api/products").then(function (result) {
+            $scope.products = result.data;
+        });
+    }
+
+    $scope.focusSearchInput = function ($event, sku) {
+        var offset = $($event.target).offset();
+        $scope.searchResultsPosition = {x: offset.left+'px', y: (offset.top+24)+'px'};
+        $scope.skuSearch(sku);
+    };
+
+    $scope.skuSearch = function (sku) {     // 商品搜索
+        if (!sku) {
+            $scope.searchResults = $scope.products;
+            return;
+        }
+        var results = [];
+        sku = sku.toLowerCase();
+        $scope.products.forEach(function (p) {
+           if (p.SellerSKU.toLowerCase().indexOf(sku) >= 0) {
+               results.push(p);
+           }
+        });
+        $scope.searchResults = results;
+    };
+
+    getProducts();
+
+    $scope.chooseProduct = function (item, product) {
+
+        item.SellerSKU = product.SellerSKU;
+        item.product = product;
+    };
+
     $scope.isDetail = id ? true : false;
     if ($scope.isDetail)
     {
@@ -48,6 +89,9 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
         $http.get(serviceFactory.shipmentDetail(id)).then(function (result) {
             $scope.formData = result.data;
             $scope.items = result.data.items;
+            if (result.data.status.id === 102 || $rootScope.userRole !== result.data.status.role) {
+                $scope.editDisable = true;
+            }
         });
         $http.get('/api/shipments/' + id +'/boxs/').then(function (result) {
             $scope.boxs = result.data;
@@ -150,6 +194,14 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
         });
     };
 
+    $scope.finish = function () {       // 关闭移库单
+        $http.patch('/api/shipments/' + id + '/close').then(function (result) {
+            getShipment(id);
+        }).catch(function (exception) {
+            console.log('error');
+        });
+    };
+
     $scope.sum = function (field, plusQuantity) {
         var total = 0;
        for (var i in $scope.items){
@@ -160,6 +212,41 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
            }
        }
         return total;
+    };
+
+    $scope.trackingTypeChange = function () {       // 切换海运/空运
+        if ($scope.formData.traffic_fee || $scope.formData.tax_fee) {       // 重新计算所有商品的运费和关税
+
+        }
+        console.log($scope.formData.tracking_type);
+    };
+
+
+    $scope.calc = function(){       // 计算每个商品的运费和关税
+        var p, totalWeight=0, totalPrice= 0, totalFreight= 0,totalTax=0;
+        for (var i in $scope.products){
+            p = $scope.products[i];
+            if ($scope.createBy == 'sea')
+            {
+                p.volume_weight = p.width * p.height * p.length / $scope.volume_args;
+                p.unit_weight = Math.max(parseFloat(p.volume_weight), parseFloat(p.weight));
+            }else{
+                p.unit_weight = p.width * p.length * p.height / 1000000;
+            }
+            totalWeight += p.unit_weight * p.QuantityShipped;
+            totalPrice += p.unit_price * p.QuantityShipped;
+        }
+        // 计算每个商品的运费和关税
+        for (var i in $scope.products){
+            p = $scope.products[i];
+            p.total_freight = p.unit_weight * p.QuantityShipped  / totalWeight * $scope.formData.total_freight;
+            totalFreight += p.total_freight;
+            p.duty = p.unit_price* p.QuantityShipped  / totalPrice * $scope.formData.duty;
+            totalTax += p.duty;
+        }
+        $scope.totalWeight = totalWeight;
+        $scope.totalTax = totalTax;
+        $scope.totalFreight = totalFreight;
     };
 
     $scope.totalWeight = 0;

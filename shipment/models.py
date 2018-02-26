@@ -16,8 +16,8 @@ class ShipmentOrder(models.Model):
     company = models.CharField(max_length=100, null=True, blank=True)       # 物流公司
     tracking_number = models.CharField(max_length=100, null=True, blank=True)   # 快递单号
     code = models.CharField(max_length=100, null=True, blank=True)      # 货件号
-    ship_type = models.IntegerField(null=True, blank=True)                   # 货运类型，1：海运，2：空运
-    volume_args = models.IntegerField(null=True, blank=True)                 # 体积参数：5000/6000
+    ship_type = models.CharField(max_length=10, default='sea')                   # 货运类型，sea：海运，air：空运
+    volume_args = models.IntegerField(default=5000)                 # 体积参数：5000/6000
     boxed_count = models.IntegerField(default=0)        # 已装箱商品数量
     box_count = models.IntegerField(default=0)          # 箱子数
     total_weight = models.FloatField(default=0)         # 实际总重量 kg
@@ -33,6 +33,10 @@ class ShipmentOrderItem(models.Model):
     product = models.ForeignKey(Product, related_name='shipments')
     count = models.IntegerField()       # 发货数量
     boxed_count = models.IntegerField(default=0)        # 已装箱数
+    volume_weight = models.FloatField(null=True, blank=True)        # 体积重
+    unit_weight = models.FloatField(null=True, blank=True)      # 单位重量，取体积重与重量重较大的那一个
+    traffic_fee = models.FloatField(null=True, blank=True)
+    tax_fee = models.FloatField(null=True, blank=True)
 
 
 class ShipmentBox(models.Model):

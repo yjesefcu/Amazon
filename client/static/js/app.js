@@ -48,7 +48,6 @@ app.controller('MainCtrl', function ($scope, $state, $http, $rootScope, $locatio
             $rootScope.permissions = data.permissions;
         });
     }
-
     getPermission();
 });
 

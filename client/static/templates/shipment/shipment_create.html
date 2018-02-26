@@ -19,7 +19,8 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>SKU</th>
+                                <th style="width: 200px;">SKU</th>
+                                <th>图片</th>
                                 <th>商品名称</th>
                                 <th>发货数量</th>
                                 <th>操作</th>
@@ -27,8 +28,21 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="p in items">
-                                <td><input class="lg" ng-model="p.SellerSKU" ng-blur="getProductInfo($index, p.SelerSKU)"></td>
-                                <td>{{ p.name }}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <input class="lg dropdown-toggle" data-toggle="dropdown" ng-model="p.SellerSKU"
+                                               ng-change="skuSearch(p.SellerSKU)" ng-click="focusSearchInput($event, p.SellerSKU)" style="width: 98%;">
+                                        <ul class="dropdown-menu result-dropdown" style="left:{{ searchResultsPosition.x }};top:{{ searchResultsPosition.y }}">
+                                            <li><a style="color:#333;">共{{ searchResults.length }}个商品</a></li>
+                                            <li role="presentation" class="divider"></li>
+                                            <li ng-repeat="tmp in searchResults">
+                                                <a role="menuitem" tabindex="-1" href="javascript:void(0)" ng-click="chooseProduct(p, tmp)">{{ tmp.SellerSKU }}</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                <td><img ng-src="{{ p.product.Image }}" ng-if="p.product.Image"></td>
+                                <td style="word-wrap:break-word;width: 250px;">{{ p.product.TitleCn }}</td>
                                 <td><input class="lg" ng-model="p.count"></td>
                                 <td><a class="fa fa-trash-o text-red" ng-click="remove($index);" title="删除该记录？"></a></td>
                             </tr>

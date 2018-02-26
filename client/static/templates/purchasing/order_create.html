@@ -61,6 +61,8 @@
                         <thead>
                         <tr>
                             <th>SKU</th>
+                            <th>图片</th>
+                            <th>商品描述</th>
                             <th>数量</th>
                             <th>单价{{currency}}</th>
                             <th>交货时间</th>
@@ -70,7 +72,21 @@
                         </thead>
                         <tbody>
                         <tr ng-repeat="p in orders">
-                            <td><input ng-model="p.SellerSKU"></td>
+                            <td>
+                                <div class="dropdown">
+                                    <input class="lg dropdown-toggle" data-toggle="dropdown" ng-model="p.SellerSKU"
+                                           ng-change="skuSearch(p.SellerSKU)" ng-click="focusSearchInput($event, p.SellerSKU)" style="width: 98%;">
+                                    <ul class="dropdown-menu result-dropdown" style="left:{{ searchResultsPosition.x }};top:{{ searchResultsPosition.y }}">
+                                        <li><a style="color:#333;">共{{ searchResults.length }}个商品</a></li>
+                                        <li role="presentation" class="divider"></li>
+                                        <li ng-repeat="tmp in searchResults">
+                                            <a role="menuitem" tabindex="-1" href="javascript:void(0)" ng-click="chooseProduct(p, tmp)">{{ tmp.SellerSKU }}</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                            <td><img ng-src="{{ p.product.Image }}"></td>
+                            <td>{{ p.product.TitleCn }}</td>
                             <td><input ng-model="p.count"></td>
                             <td><input ng-model="p.price"></td>
                             <td><input ng-model="p.expect_date" placeholder="格式：2017-01-01"></td>
