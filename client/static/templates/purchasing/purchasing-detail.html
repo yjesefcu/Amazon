@@ -32,6 +32,12 @@
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >经办人：</label><span>{{ order.contract.operator }}</span>
                             </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >采购时间：</label><span>{{order.create_time}}</span>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >采购人员：</label><span>{{order.creator}}</span>
+                            </div>
                         </div>
 
                         <div class="row">
@@ -50,16 +56,13 @@
                         </div>
                         <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >采购时间：</label><span>{{order.create_time}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >采购人员：</label><span>{{order.creator}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
                                 <label >采购数量：</label><span>{{order.count}}</span>
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >采购单价：</label><span>{{order.price}}({{currency}})</span>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >总价：</label><span>{{order.price*order.count}}({{currency}})</span>
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >预付款：</label><span>{{order.deposit}}({{currency}})</span>
@@ -97,6 +100,7 @@
                             <th>入库数量</th>
                             <th>运费{{currency}}</th>
                             <th>状态</th>
+                            <th>当前处理人</th>
                             <th>操作</th>
                         </tr>
                         </thead>
@@ -108,6 +112,7 @@
                             <td>{{ p.count}}</td>
                             <td>{{ p.traffic_fee }}</td>
                             <td>{{p.status.name}}</td>
+                            <td>{{p.status.role_name}}</td>
                             <td>
                                 <a class="btn btn-default" title="完成入库" ng-click="openInboudModal(p.id)" ng-if="p.status.id===5 && userRole===p.status.role">入库</a>
                                 <a class="btn btn-default" title="确认入库信息" ng-click="updateInbound(p.id, 'confirm')" ng-if="p.status.id===6 && userRole===p.status.role">入库确认</a>
