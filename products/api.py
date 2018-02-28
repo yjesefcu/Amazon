@@ -489,7 +489,7 @@ class StorageDbHandler(object):
             try:
                 p = Product.objects.get(ASIN=asin)
                 total_fee += fee
-                obj = ProductSettlement.objects.get(product=p, settlement=settlement)
+                obj, created = ProductSettlement.objects.get_or_create(product=p, settlement=settlement)
                 obj.storage_fee = fee
                 obj.save()
                 # 平均到每个订单上
