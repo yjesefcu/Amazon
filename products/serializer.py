@@ -89,6 +89,7 @@ class SimpleProductSettlementSerializer(serializers.ModelSerializer):
     total_cost = FloatRoundField()
     subscription_fee = FloatRoundField()
     advertising_fee = FloatRoundField()
+    storage_fee = FloatRoundField()
 
     class Meta:
         model = ProductSettlement
@@ -114,6 +115,7 @@ class SimpleOrderItemSerializer(serializers.ModelSerializer):
     profit = FloatRoundField()
     profit_rate = ProfitRateField(read_only=True)
     total_cost = FloatRoundField()
+    storage_fee = FloatRoundField()
     subscription_fee = FloatRoundField()
     cost = FloatRoundField()
 

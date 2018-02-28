@@ -486,6 +486,7 @@ class StorageDbHandler(object):
                 data_by_asin[asin] = to_float(item['Fee'])
         total_fee = 0   #
         for asin, fee in data_by_asin.items():
+            fee = -fee
             try:
                 p = Product.objects.get(ASIN=asin)
                 total_fee += fee
@@ -497,7 +498,7 @@ class StorageDbHandler(object):
                 if orders.exists():
                     orders.update(storage_fee=fee/float(orders.count()))
                     t = SettleOrderItem.objects.get(settlement=settlement, product=p, is_total=True)
-                    t.storage_fee = -fee
+                    t.storage_fee = fee
                     t.save()
                 results.append(obj)
             except Product.DoesNotExist, ex:
