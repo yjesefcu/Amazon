@@ -15,6 +15,8 @@ class BaseTextParser(object):
         try:
             keys = lines[0].strip().split('\t')
             for l in lines[1:]:
+                if not l:
+                    continue
                 values = l.strip().split('\t')
                 if len(values) < len(keys):
                     continue
@@ -74,18 +76,6 @@ class ProductRemovalParser(BaseTextParser):
             })
 
 
-class AdvertisingParser(BaseTextParser):
-    # 广告业绩表
-    def _parse(self):
-        for item in self.lines:
-            self.items.append({
-                'StartDate': item['Start Date'],
-                'EndDate': item['End Date'],
-                'SellerSKU': item['SKU'],
-                'TotalSpend': item['Total Spend']
-            })
-
-
 class MonthlyStorageFeeParser(BaseTextParser):
     """
     月度仓储费解析
@@ -96,6 +86,22 @@ class MonthlyStorageFeeParser(BaseTextParser):
                 'ASIN': item['asin'],
                 'ChargeDate': item['month-of-charge'],
                 'Fee': item['estimated-monthly-storage-fee']
+            })
+
+
+class AdvertisingReportParser(BaseTextParser):
+    """
+    广告费报告
+    """
+    def _parse(self):
+        for item in self.lines:
+            if item.get('Total Spend'):
+                fee = float(item.get('Total Spend'))
+            else:
+                fee = 0
+            self.items.append({
+                'SellerSKU': item['Advertised SKU'],
+                'Fee': fee
             })
 
 

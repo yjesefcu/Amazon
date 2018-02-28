@@ -497,7 +497,7 @@ class StorageDbHandler(object):
                 if orders.exists():
                     orders.update(storage_fee=fee/float(orders.count()))
                     t = SettleOrderItem.objects.get(settlement=settlement, product=p, is_total=True)
-                    t.storage_fee = fee
+                    t.storage_fee = -fee
                     t.save()
                 results.append(obj)
             except Product.DoesNotExist, ex:
@@ -517,54 +517,32 @@ class AdvertisingDbHandler(object):
     def update_to_db(self, settlement, data):
         # 将广告报告数据导入到数据库
         # 先清除原有的记录
+
         self._clear_product_advertising(settlement)
-        settlement.StartDate = settlement.StartDate.strftime('%Y-%m-%d')
-        settlement.EndDate = settlement.EndDate.strftime('%Y-%m-%d')
+        # 先按SellerSKU将广告费进行统计
+        data_by_sku = dict()
+        total_fee = 0
         for item in data:
-            self._split_by_day(settlement, item)
-        # 将广告费平摊到订单上
-        self._update_advertising_to_order(settlement)
-        # 广告费求和
-        settlement.advertising_fee_adjust = sum_queryset(ProductSettlement.objects.filter(settlement=settlement), 'advertising_fee')
-        settlement.save()
+            sku = item['SellerSKU']
+            if sku in data_by_sku:
+                data_by_sku[sku] += to_float(item['Fee'])
+            else:
+                data_by_sku[sku] = to_float(item['Fee'])
+            total_fee += to_float(item['Fee'])
+        # 将报告中的total_fee与结算报告中实际支持的广告费进行对比，将差额部分按照每个商品的广告费比例进行平均
+        tmp = total_fee + settlement.advertising_fee
+        tmp_total = 0
+        for sku, fee in data_by_sku.items():
+            p, created = Product.objects.get_or_create(SellerSKU=sku, MarketplaceId=settlement.MarketplaceId)
+            obj, created = ProductSettlement.objects.get_or_create(product=p, settlement=settlement)
+            obj.advertising_fee = -fee + fee/total_fee*tmp
+            tmp_total += obj.advertising_fee
+            obj.save()
+        print tmp_total
 
     def _clear_product_advertising(self, settlement):
         # 先清除商品原有的广告费
         ProductSettlement.objects.filter(settlement=settlement).update(advertising_fee=0)
-
-    def _split_by_day(self, settlement, item):
-        # 将每条广告记录按天进行平均。如果是周报告，则平均成7条记录，如果是月报告，则分成30条记录
-        start = dateutil.parser.parse(item['StartDate']).replace(tzinfo=None)
-        end = dateutil.parser.parse(item['EndDate']).replace(tzinfo=None)
-        days = (end-start).days
-        if end.strftime('%Y-%m-%d') <= settlement.StartDate or start.strftime('%Y-%m-%d') >= settlement.EndDate:
-            # 不在settlement范围内
-            return
-        avg_fee = to_float(item['TotalSpend']) / days    # 将费用平均到days天
-        # 取settlement时间范围内的数据
-        p, created = Product.objects.get_or_create(SellerSKU=item['SellerSKU'], MarketplaceId=settlement.MarketplaceId)
-        total = 0
-        for delta in range(0, days):
-            d = (start + datetime.timedelta(days=delta)).strftime('%Y-%m-%d')
-            if d >= settlement.StartDate and d < settlement.EndDate:
-                # 取settlement日期内的数据，并将费用求和
-                total += avg_fee
-        ps, created = ProductSettlement.objects.get_or_create(product=p, settlement=settlement)
-        if ps.advertising_fee is None:
-            ps.advertising_fee = 0
-        # 更新该产品总广告费
-        ps.advertising_fee -= total
-        ps.save()
-
-    def _update_advertising_to_order(self, settlement):
-        # 将广告费平摊到订单上
-        SettleOrderItem.objects.filter(settlement=settlement).update(advertising_fee=0)     # 先清除原来的广告费
-        for ps in ProductSettlement.objects.filter(settlement=settlement, advertising_fee__gt=0):
-            fee = ps.advertising_fee
-            query_set = SettleOrderItem.objects.filter(settlement=settlement, product=ps.product)
-            count = query_set.count()
-            if count > 0:
-                query_set.update(advertising_fee=fee/float(count))
 
 
 # 将广告数据在settlement时间范围内的数据，平均成天保存到数据库里，不在settlement时间范围内的不保存
@@ -1302,7 +1280,7 @@ class FileImporter(object):
 
     @classmethod
     def import_advertising(cls, text, settlement):
-        from amazon_services.text_parser import AdvertisingParser
-        parser = AdvertisingParser(text)
+        from amazon_services.text_parser import AdvertisingReportParser
+        parser = AdvertisingReportParser(text)
         items = parser.get_items()
         AdvertisingDbHandler().update_to_db(settlement=settlement, data=items)
