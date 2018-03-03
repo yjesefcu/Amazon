@@ -67,18 +67,29 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         items = data.get('items')
         del data['items']
         create_time = datetime.datetime.now().replace(tzinfo=TZ_ASIA)
-        order = PurchasingOrder.objects.create(create_time=create_time, status_id=OrderStatus.WaitForDepositPayed,
-                                               next_to_pay=data.get('deposit'), next_payment_comment=u'预付款',
-                                               **data)
+        data['next_to_pay'] = data.get('deposit')
+        data['next_payment_comment'] = u'预付款'
+        data['status_id'] = OrderStatus.WaitForDepositPayed
+        data['create_time'] = create_time
+        if 'id' in data:
+            del data['id']
+            del data['status']
+            del data['payments']
+        order = PurchasingOrder.objects.create(**data)
         count = 0
         total_price = 0
         for d in items:
             product_id = d.get('product').get("id")
-            total_price = int(d.get('count')) * float(d.get('price'))
+            price = int(d.get('count')) * float(d.get('price'))
             if 'product' in d:
                 del d['product']
-            poi = PurchasingOrderItems.objects.create(product_id=product_id, total_price=total_price, order=order, **d)
-            count += poi.count
+            if 'id' in d:
+                del d['id']
+            d['product_id'] = product_id
+            d['total_price'] = price
+            d['order'] = order
+            poi = PurchasingOrderItems.objects.create(**d)
+            count += to_int(poi.count)
             total_price += poi.total_price
         order.count = count
         order.total_price = total_price

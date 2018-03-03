@@ -23,6 +23,7 @@ var Role = {
 };
 
 app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope, $state, $stateParams) {
+    $scope.id = $stateParams.id;
     $scope.order = {items: []};
     $scope.contract = {};
     $scope.searchResults = [];
@@ -67,13 +68,47 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
         item.product = product;
     };
 
-    getProducts();
+    function init() {
+        if ($scope.id) {
+            $http.get('/api/purchasing/' + $scope.id + '/').then(function (result) {
+                $scope.order = result.data;
+            })
+        }
+        getProducts();
+    }
+
+    init();
 
     $scope.addOrderItem = function () {
         $scope.order.items.push({});
     };
 
+    $scope.delete = function (forward) {
+        $.ajax({
+            url: '/api/purchasing/'+$scope.id+'/',
+            method: 'delete',
+            async: false,
+            success: function () {
+                // 跳回到列表页
+                if (forward)
+                {
+                    $rootScope.addAlert('success', '删除成功');
+                    $state.go('index.purchasing');
+                }
+            },
+            error: function (xhr) {
+                if (forward)
+                {
+                    $rootScope.addAlert('danger', '删除失败');
+                }
+            }
+        });
+    };
+
     $scope.save = function () {
+        if ($scope.id) {       // 如果是编辑的话，先删除原来的订单，再新建
+            $scope.delete(false);
+        }
         var items = [];
         $scope.order.items.forEach(function (n) {
            if (n.SellerSKU && n.count) {
@@ -84,7 +119,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
         $http.post('/api/purchasing/', $scope.order).then(function (result) {
             $state.go('index.purchasingDetail', {orderId: result.data.id});
         }).catch(function (error) {
-            $rootScope.addAlert('error', '创建采购单失败');
+            $rootScope.addAlert('danger', '创建采购单失败');
         });
     };
 
@@ -98,17 +133,23 @@ app.controller('PurchasingOrderListCtrl', function ($scope, $http, $rootScope) {
 
     function getData() {
         $http.get('/api/purchasing/').then(function (result) {
-            $scope.orders = result.data;
-            // 判断采购单是否可操作
-            var userRole = $rootScope.userRole;
-            $scope.orders.forEach(function (n) {
-                if (n.status.role === userRole) {
-                    n.canEdit = true;
-                }
-            });
+            sortOrder(result.data);
         }).catch(function (error) {
              $rootScope.addAlert('error', '获取采购单失败');
         });
+    }
+
+    function sortOrder(orders) {        // 将待办的往前放
+        var todos = [], others = [], userRole=$rootScope.userRole;
+        orders.forEach(function (n) {
+           if (n.status.role == userRole) {
+                n.canEdit = true;
+               todos.push(n);
+           }  else {
+               others.push(n);
+           }
+        });
+        $scope.orders = todos.concat(others);
     }
 
     getData();

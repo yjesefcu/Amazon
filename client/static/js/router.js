@@ -81,7 +81,7 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
             // controller: 'ProductCtrl'
         })
         .state('index.purchasingCreate', {
-            url: 'purchasing/create',
+            url: 'purchasing/create/:id',
             templateUrl: 'static/templates/purchasing/order_create.html',
             params: {
                 products: []
