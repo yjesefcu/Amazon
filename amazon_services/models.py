@@ -21,6 +21,7 @@ class MarketAccount(models.Model):
     SecretKey = models.CharField(max_length=50)
     MarketplaceId = models.CharField(max_length=20)
     currency_code = models.CharField(max_length=10)     # 货币编码
+    exchange_rate = models.FloatField(default=6.0)      # 汇率
     period_start = models.DateField(null=True, blank=True)  # 结算周期起点
     period_days = models.IntegerField(default=14)       # 结算周期长度
     sync_report_status = models.IntegerField(default=0)     # 0:Finished， 1：Error， 10：Running

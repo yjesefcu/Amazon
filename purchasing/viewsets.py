@@ -14,6 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
 from amazon_services.exception import TextParseException
 from models import *
+from amazon_services.api import get_exchange_rate
 from serializer import *
 
 
@@ -271,6 +272,8 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         # 找出商品单价
         poi = PurchasingOrderItems.objects.get(order_id=item.purchasing_order_id, product=product)
         new_cost = (item.received_count * poi.price + item.traffic_fee) / float(count)      # 由于支付尾款时是按总数量支付的，因此损坏的数量也要算上去
+        # 需要处以汇率
+        new_cost = new_cost / get_exchange_rate()
         # 更新商品当前国内总成本
         total = to_float(product.supply_cost) * to_int(product.domestic_inventory) + new_cost
         add_int(product, 'domestic_inventory', count)       # 增加库存

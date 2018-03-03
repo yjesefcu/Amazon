@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 __author__ = 'liucaiyun'
+from .models import MarketAccount
 
 
 def send_request(market_id, action_desc, params):
@@ -11,3 +12,16 @@ def send_request(market_id, action_desc, params):
     :return:
     """
     pass
+
+
+exchange_rate = None
+
+
+def get_exchange_rate():
+    # 获取汇率
+
+    global exchange_rate
+    if exchange_rate:
+        return exchange_rate
+    account = MarketAccount.objects.get(MarketplaceId='ATVPDKIKX0DER')
+    return account.exchange_rate
