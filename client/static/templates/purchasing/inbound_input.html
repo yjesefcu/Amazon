@@ -1,0 +1,81 @@
+<style>
+    .modal-lg{
+        width: 1200px;
+    }
+</style>
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">创建物流信息</h4>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal" id="inboundForm">
+        <div class="box-body">
+            <div class="col-sm-6">
+                <h4>物流公司：{{ order.tracking_company }}</h4>
+            </div>
+            <div class="col-sm-6">
+                <h4>物流单号：{{ order.tracking_number }}</h4>
+            </div>
+            <div class="col-sm-6">
+                <h4>运费（元）：</h4>
+                <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
+                    <input type="text" class="form-control" placeholder="请输入运费" ng-model="order.traffic_fee" required>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <h3>商品列表</h3>
+        <span>注：商品尺寸不能为空</span>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>商品SKU</th>
+                    <th>图片</th>
+                    <th>发货数量</th>
+                    <th>到货数量</th>
+                    <th>损坏数量</th>
+                    <th>商品尺寸(长*宽*高)cm</th>
+                    <th>商品重量(kg)</th>
+                    <th>包装尺寸(长*宽*高)cm</th>
+                    <th>包装重量(kg)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in order.items">
+                    <td>{{ item.product.SellerSKU }}</td>
+                    <td><img ng-src="{{ item.product.Image }}"> </td>
+                    <td>{{ item.expect_count }}</td>
+                    <td>
+                        <input type="text" ng-model="item.received_count" class="short-input">
+                    </td>
+                    <td>
+                        <input type="text" ng-model="item.damage_count" class="short-input">
+                    </td>
+                    <td>
+                        <input type="text" ng-model="item.product.length" required class="short-input" ng-change="inputChange()">
+                        <input type="text" ng-model="item.product.width" required class="short-input" ng-change="inputChange()">
+                        <input type="text" ng-model="item.product.height" required class="short-input" ng-change="inputChange()">
+                    </td>
+                    <td>
+                        <input type="text" ng-model="item.product.weight" required class="short-input" ng-change="inputChange()">
+                    </td>
+                    <td>
+                        <input type="text" ng-model="item.product.package_length" required class="short-input" ng-change="inputChange()">
+                        <input type="text" ng-model="item.product.package_width" required class="short-input" ng-change="inputChange()">
+                        <input type="text" ng-model="item.product.package_height" required class="short-input" ng-change="inputChange()">
+                    </td>
+                    <td>
+                        <input type="text" ng-model="item.product.package_weight" required class="short-input" ng-change="inputChange()">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </form>
+    <div class="text-red">{{ error }}</div>
+</div>
+<div class="modal-footer">
+    <!--<button type="button" class="btn btn-default pull-left" data-dismiss="modal" ng-click="cancel()">取消</button>-->
+    <button type="button" class="btn btn-primary" ng-click="save()">保存</button>
+</div>

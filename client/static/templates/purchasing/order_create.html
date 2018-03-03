@@ -19,27 +19,31 @@
                         <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >合同单号</label>
-                                <input type="text" class="form-control" placeholder="请输入合同单号" ng-model="contract.contract_number">
+                                <input type="text" class="form-control" placeholder="请输入合同单号" ng-model="order.contract_number">
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >供应商</label>
-                                <input type="text" class="form-control" placeholder="请输入供应商名称" ng-model="contract.supplier">
+                                <input type="text" class="form-control" placeholder="请输入供应商名称" ng-model="order.supplier">
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >联系人</label>
-                                <input type="text" class="form-control" placeholder="供应商联系人" ng-model="contract.contact_person">
+                                <input type="text" class="form-control" placeholder="供应商联系人" ng-model="order.contact_person">
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >联系方式</label>
-                                <input type="text" class="form-control" placeholder="供应商联系号码" ng-model="contract.contact_phone">
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >物流说明</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="contract.traffic_comment">
+                                <input type="text" class="form-control" placeholder="供应商联系号码" ng-model="order.contact_phone">
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >经办人</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="contract.operator">
+                                <input type="text" class="form-control" placeholder="" ng-model="order.operator">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >交货时间</label>
+                                <input type="text" class="form-control" placeholder="预计交货日期，格式：2018-01-01" ng-model="order.expect_date">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >预付款</label>
+                                <input type="text" class="form-control" placeholder="应支付预付款，单位：元" ng-model="order.deposit">
                             </div>
                         </div>
                     </div>
@@ -64,14 +68,12 @@
                             <th>图片</th>
                             <th>商品描述</th>
                             <th>数量</th>
-                            <th>单价{{currency}}</th>
-                            <th>交货时间</th>
-                            <th>应付预付款{{currency}}</th>
+                            <th>单价(元)</th>
                             <th>操作</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="p in orders">
+                        <tr ng-repeat="p in order.items">
                             <td>
                                 <div class="dropdown">
                                     <input class="lg dropdown-toggle" data-toggle="dropdown" ng-model="p.SellerSKU"
@@ -91,8 +93,6 @@
                             <td>{{ p.product.TitleCn }}</td>
                             <td><input ng-model="p.count"></td>
                             <td><input ng-model="p.price"></td>
-                            <td><input ng-model="p.expect_date" placeholder="格式：2017-01-01"></td>
-                            <td><input ng-model="p.deposit" class="md"></td>
                             <td><a class="fa fa-trash-o text-red" ng-click="remove($index);" title="删除该记录？"></a></td>
 
                         </tr>

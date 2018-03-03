@@ -2,6 +2,8 @@
 __author__ = 'liucaiyun'
 import os, datetime, chardet, threading, pytz
 from django.conf import settings
+from django.db import transaction
+from django.db.utils import IntegrityError
 from rest_framework_extensions.mixins import NestedViewSetMixin
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -24,6 +26,24 @@ def to_float(v):
     return float(v)
 
 
+def add_int(obj, field, value):
+    if not value:
+        return
+    if getattr(obj, field):
+        setattr(obj, field, getattr(obj, field) + int(value))
+    else:
+        setattr(obj, field, int(value))
+
+
+def add_float(obj, field, value):
+    if not value:
+        return
+    if getattr(obj, field):
+        setattr(obj, field, getattr(obj, field) + float(value))
+    else:
+        setattr(obj, field, float(value))
+
+
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
@@ -31,75 +51,158 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 
 class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
-    queryset = PurchasingOrder.objects.all().order_by('-id').select_related('product', 'status')
-    serializer_class = PurchasingOrderSerializer
+    queryset = PurchasingOrder.objects.all().order_by('-id').select_related('status')
+    serializer_class = PurchasingOrderDetailSerializer
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('MarketplaceId', 'product_id')
+    # filter_backends = (DjangoFilterBackend,)
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        contract_data = data.get('contract')
-        contract = Contract.objects.create(**contract_data)
-        orders_data = data.get('orders')
+        items = data.get('items')
+        del data['items']
         create_time = datetime.datetime.now().replace(tzinfo=TZ_ASIA)
-        for d in orders_data:
-            product, created = Product.objects.get_or_create(MarketplaceId='ATVPDKIKX0DER', SellerSKU=d.get('SellerSKU'))
+        order = PurchasingOrder.objects.create(create_time=create_time, status_id=OrderStatus.WaitForDepositPayed,
+                                               next_to_pay=data.get('deposit'), next_payment_comment=u'预付款',
+                                               **data)
+        count = 0
+        total_price = 0
+        for d in items:
+            product_id = d.get('product').get("id")
             total_price = int(d.get('count')) * float(d.get('price'))
             if 'product' in d:
                 del d['product']
-            PurchasingOrder.objects.create(contract=contract, product=product, create_time=create_time,
-                                           status_id=OrderStatus.WaitForDepositPayed, received_count=0, total_price=total_price, **d)
-        return Response({}, status=status.HTTP_201_CREATED)
+            poi = PurchasingOrderItems.objects.create(product_id=product_id, total_price=total_price, order=order, **d)
+            count += poi.count
+            total_price += poi.total_price
+        order.count = count
+        order.total_price = total_price
+        order.save()
+        headers = self.get_success_headers(self.get_serializer(order).data)
+        return Response(self.get_serializer(order).data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InboundViewSet(NestedViewSetMixin, ModelViewSet):
-    queryset = InboundProducts.objects.all().order_by('-id')
-    serializer_class = InboundSerializer
+class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
+    queryset = TrackingOrder.objects.all().order_by('-id')
+    serializer_class = TrackingOrderSerializer
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     filter_backends = (DjangoFilterBackend,)
 
     def create(self, request, *args, **kwargs):
         _query_dict = self.get_parents_query_dict()
-        order = PurchasingOrder.objects.get(pk=_query_dict['order'])
+        purchasing_order = PurchasingOrder.objects.get(pk=_query_dict['purchasing_order'])
         today = datetime.datetime.now().replace(tzinfo=TZ_ASIA).date()
         status_id = OrderStatus.WaitForInbound
-        inbound = InboundProducts.objects.create(order=order, product=order.product, shipping_date=today, status_id=status_id, **request.data)
-        serializer = self.get_serializer(instance=inbound)
-        # 更新订单本身的状态
-        order.status_id = status_id
-        order.save()
+        data = request.data
+        items = request.data['items']
+        del data['items']
+        try:
+            with transaction.atomic():
+                inbound = TrackingOrder.objects.create(purchasing_order=purchasing_order, shipping_date=today, status_id=status_id, **data)
+                serializer = self.get_serializer(instance=inbound)
+
+                # 增加商品的发货数量信息
+                count = 0
+                for item in items:
+                    product = Product.objects.get(pk=item['product']['id'])
+                    titem = TrackingOrderItems.objects.create(purchasing_order=purchasing_order, traffic_order=inbound, shipping_date=today,
+                                                      product=product, expect_count=item.get('expect_count'))
+                    count += int(item['expect_count'])
+                    # 更新每一个商品的发货数量
+                    pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
+                    if pitem.expect_count:
+                        pitem.expect_count += titem.expect_count
+                    else:
+                        pitem.expect_count = titem.expect_count
+                    pitem.save()
+                inbound.expect_count = count
+                inbound.save()
+                # 更新订单本身的状态
+                if purchasing_order.expect_count:
+                    purchasing_order.expect_count += count
+                else:
+                    purchasing_order.expect_count = count
+                purchasing_order.status_id = status_id
+                purchasing_order.save()
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # 是否需要更新商品信息
+    def _update_product(self, product, data):
+        fields = ['width', 'length', 'height', 'weight', 'package_width', 'package_length', 'package_height', 'package_weight']
+        equal = True
+        for field in fields:
+            if getattr(product, field) != to_float(data.get(field)):
+                setattr(product, field, to_float(data.get(field)))
+                equal = False
+        if not equal:
+            product.save()
 
     @detail_route(methods=['post'])
     def putin(self, request, pk, **kwargs):
         # 入库
+        data = request.data
         instance = self.get_object()
-        inbound_data = request.data.get('inbound')
-        inbound_data['inbound_time'] = datetime.datetime.now().replace(tzinfo=TZ_ASIA)
-        status_id = OrderStatus.WaitForCheck
-        # inbound_data['status_id'] = status_id
-        instance.status_id = status_id
-        serializer = self.get_serializer(instance, data=inbound_data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        input_date = datetime.datetime.now().replace(tzinfo=TZ_ASIA).date()
+        status_id = OrderStatus.WaitForTrafficFeePayed
         # 如果product的尺寸有更新
-        order = instance.order
-        if request.data.get('product'):
-            d = request.data.get('product')
-            fields = ['width', 'height', 'length', 'weight', 'package_width', 'package_height', 'package_length', 'package_weight']
-            product = order.product
-            for field in fields:
-                setattr(product, field, d.get(field))
-            product.save()
-        # 更新订单状态
-        order.received_count += int(instance.count)
-        # 更新订单运费
-        order.status_id = status_id
-        order.traffic_fee = to_float(order.traffic_fee) + to_float(instance.traffic_fee)
-        order.save()
+        received_count = 0
+        damage_count = 0
+        purchasing_order = instance.purchasing_order
+        try:
+            with transaction.atomic():
+                for item_date in data.get('items'):
+                    item = TrackingOrderItems.objects.get(id=item_date.get('id'))
+                    product = item.product
+                    self._update_product(product, item_date.get('product'))      # 更新商品的尺寸信息
+                    item.input_date = input_date
+                    item.received_count = item_date.get('received_count')
+                    item.damage_count = item_date.get('damage_count')
+                    item.save()
+                    # 更新采购单商品的数量
+                    pitem = PurchasingOrderItems.objects.get(order=purchasing_order, product=product)
+                    add_int(pitem, 'received_count', item.received_count)
+                    add_int(pitem, 'damage_count', item.damage_count)
+                    pitem.save()
+                    # 统计
+                    received_count += int(item.received_count)
+                    damage_count += int(item.damage_count)
+                # 更新物流总数据
+                add_int(instance, 'received_count', received_count)
+                add_int(instance, 'damage_count', damage_count)
+                instance.traffic_fee = data.get('traffic_fee')
+                instance.input_date = input_date
+                instance.status_id = status_id
+                instance.save()
+
+                # 更新采购订单的收货数量和损坏数量
+                add_int(purchasing_order, 'received_count', received_count)
+                add_int(purchasing_order, 'damage_count', damage_count)
+                add_float(purchasing_order, 'traffic_fee', data.get('traffic_fee'))
+                add_float(purchasing_order, 'next_to_pay', data.get('traffic_fee'))
+                purchasing_order.next_payment_comment = '物流费'
+                purchasing_order.status_id = status_id
+                purchasing_order.save()
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    def _split_traffic_fee(self, traffic_order):
+        # 将运费平摊到每个商品上面
+        items = traffic_order.items
+        # 按商品的重量*数量进行平摊
+        total_weight = 0
+        for item in items:
+            total_weight += item.product.weight * item.received_count
+        for item in items:
+            item.traffic_fee = (item.product.weight * item.received_count) / total_weight * traffic_order.traffic_fee_payed
+            item.save()
+            # 加到采购单对应商品中
+            poi = PurchasingOrderItems.objects.get(product=item.product, order=traffic_order.purchasing_order)
+            add_float(poi, 'traffic_fee', item.traffic_fee)
+            poi.save()
 
     @detail_route(methods=['post'])
     def confirm(self, request, pk, **kwargs):
@@ -126,13 +229,24 @@ class InboundViewSet(NestedViewSetMixin, ModelViewSet):
     def payed(self, request, pk, **kwargs):
         # 物流费打款
         instance = self.get_object()
-        instance.traffic_fee_payed = request.data.get('traffic_fee_payed')
+        fee = to_float(request.data.get('traffic_fee_payed'))
+        instance.traffic_fee_payed = fee
         instance.status_id = OrderStatus.FINISH
         instance.save()
 
-        order = instance.order
+        order = instance.purchasing_order
+        add_float(order, 'total_payed', fee)
+        order.next_to_pay -= fee
         order.save()
-        self._check_inbound_finish(instance)
+
+        # 增加一条打款记录
+        PaymentRecord.objects.create(order=order, traffic_order=instance, payment_comment=u'物流费', need_payed=instance.traffic_fee, payed=fee,
+                                     pay_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA), creator=request.user)
+
+        # 平摊运费
+        self._split_traffic_fee(instance)
+
+        # self._check_inbound_finish(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 

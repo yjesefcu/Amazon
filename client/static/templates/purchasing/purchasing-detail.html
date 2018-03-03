@@ -5,119 +5,119 @@
     </h1>
 </section>
 <section class="content" ng-controller="PurchasingOrderDetailCtrl">
-    <div class="row">
-        <div class="col-md-12">
-            <!-- general form elements -->
-            <div class="box box-primary">
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <h4>合同信息：</h4>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >合同单号：</label><span>{{order.contract.contract_number}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >供应商：</label><span>{{order.contract.supplier}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >联系人：</label><span>{{order.contract.contact_person}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >联系方式：</label><span>{{order.contract.contact_phone}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >物流说明：</label><span>{{order.contract.traffic_comment}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >经办人：</label><span>{{ order.contract.operator }}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >采购时间：</label><span>{{order.create_time}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >采购人员：</label><span>{{order.creator}}</span>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <h4>采购商品：</h4>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >商品SKU：</label><span>{{order.SellerSKU}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >图片：</label><img ng-src="{{order.product.Image}}">
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >商品描述：</label><span>{{order.product.TitleCn}}</span>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >采购数量：</label><span>{{order.count}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >采购单价：</label><span>{{order.price}}({{currency}})</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >总价：</label><span>{{order.price*order.count}}({{currency}})</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >预付款：</label><span>{{order.deposit}}({{currency}})</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >已入库数量：</label><span>{{order.received_count}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >采购单状态：</label><span>{{order.status.name}}</span>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >当前处理人：</label><span>{{order.status.role_name}}</span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- general form elements -->
+    <div class="box box-primary">
+        <div class="box-body">
+            <div class="row">
+                <div class="box-header with-border">
+                  <h3 class="box-title">采购单基本信息</h3>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >合同单号：</span><span>{{order.contract_number}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >供应商：</span><span>{{order.supplier}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >联系人：</span><span>{{order.contact_person}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >联系方式：</span><span>{{order.contact_phone}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >经办人：</span><span>{{ order.operator }}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >采购时间：</span><span>{{order.create_time}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >采购人员：</span><span>{{order.creator}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >预计交换日期：</span><span>{{order.expect_date}}</span>
+                </div>
             </div>
-            <!-- /.box -->
+
         </div>
     </div>
-    <div class="row" ng-if="inbounds.length">
+    <div class="box box-primary">
+        <div class="box-body">
+            <div class="row">
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >采购总数量：</span><span>{{order.count}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >商品总价：</span><span>{{order.total_price}}元</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >预付款：</span><span>{{order.deposit}}元</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >尾款：</span><span>{{order.total_price-order.deposit}}元</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span>运费：</span><span>{{order.traffic_fee}}元</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >总支付：</span><span>{{order.deposit}}元</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >待支付：</span><span ng-class="{'text-red': order.next_to_pay}">{{order.next_to_pay}}元</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >到货数量：</span><span>{{order.received_count}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >损坏数量：</span><span ng-class="{'text-red': order.damage_count}">{{order.damage_count}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >在途数量：</span><span>{{order.expect_count}}</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- /.box -->
+    <div class="row" ng-if="order.items.length">
         <div class="col-md-12">
             <!-- general form elements -->
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">入库信息</h3>
+                    <h3 class="box-title">采购商品</h3>
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body">
                     <table id="productTable" class="table table-bordered table-hover">
                         <thead>
                         <tr>
-                            <th>发货时间</th>
-                            <th>物流信息</th>
-                            <th>入库时间</th>
-                            <th>入库数量</th>
-                            <th>运费{{currency}}</th>
-                            <th>状态</th>
-                            <th>当前处理人</th>
-                            <th>操作</th>
+                            <th>商品SKU</th>
+                            <th>图片</th>
+                            <th>描述</th>
+                            <th>采购数量</th>
+                            <th>单价(元)</th>
+                            <th>总价</th>
+                            <th>已入库数量</th>
+                            <th>损坏数量</th>
+                            <th>物流费(元)</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="p in inbounds" table-repeat-directive>
-                            <td>{{ p.shipping_date }}</td>
-                            <td>{{p.traffic_info}}</td>
-                            <td>{{p.inbound_time}}</td>
+                        <tr ng-repeat="p in order.items">
+                            <td>{{ p.SellerSKU }}</td>
+                            <td><img ng-src="{{ p.product.Image }}"> </td>
+                            <td>{{p.product.TitleCn}}</td>
                             <td>{{ p.count}}</td>
+                            <td>{{ p.price }}</td>
+                            <td>{{p.total_price}}</td>
+                            <td>{{p.received_count}}</td>
+                            <td>{{p.damage_count}}</td>
                             <td>{{ p.traffic_fee }}</td>
-                            <td>{{p.status.name}}</td>
-                            <td>{{p.status.role_name}}</td>
-                            <td>
-                                <a class="btn btn-default" title="完成入库" ng-click="openInboudModal(p.id)" ng-if="p.status.id===5 && userRole===p.status.role">入库</a>
-                                <a class="btn btn-default" title="确认入库信息" ng-click="updateInbound(p.id, 'confirm')" ng-if="p.status.id===6 && userRole===p.status.role">入库确认</a>
-                                <a class="btn btn-default" title="确认物流费已打款" ng-click="inboundTrafficFeeConfirm(p.id)" ng-if="p.status.id===7 && userRole===p.status.role">物流费已打款</a>
-                            </td>
                         </tr>
                         </tbody>
                     </table>
@@ -127,25 +127,24 @@
             <!-- /.box -->
         </div>
     </div>
-    <div class="row">
-        <div class="col-sm-12" ng-if="order.status.id === 1 && userRole===order.status.role">
-            <input type="text" placeholder="请输入实际支付预付款：{{order.deposit}}({{currency}})" class="col-sm-4" ng-model="order.deposit_payed">
-            <button ng-click="update({deposit_payed: order.deposit_payed, status_id: 2, final_payment_payed: (order.total_price-order.deposit_payed)})">确认已打款</button>
+    <div class="box box-primary">
+        <div class="box-body">
+            <div class="box-header with-border">
+              <h3 class="box-title">打款记录</h3>
+            </div>
+            <div class="row" ng-repeat="p in order.payments">
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >打款时间：</span><span>{{p.pay_time}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >支付数额：</span><span>{{p.payed}}元</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >说明：</span><span>{{p.payment_comment}}</span>
+                </div>
+            </div>
+
         </div>
-        <div class="col-sm-12" ng-if="order.status.id === 2 && userRole===order.status.role">
-            <button class="btn btn-primary" ng-click="update({status_id: 3})">货物生产已完成，提交财务打尾款</button>
-        </div>
-        <div class="col-sm-12" ng-if="order.status.id === 3 && userRole===order.status.role">
-            <input type="text" placeholder="请输入实际支出尾款：{{order.final_payment_payed}}({{currency}})" class="col-sm-4" ng-model="order.final_payment_payed">
-            <button ng-click="update({final_payment_payed: order.final_payment_payed, status_id: 4})">确认尾款已打款</button>
-        </div>
-        <div class="col-sm-12" ng-if="order.status.id === 4 && userRole===order.status.role">
-            <input type="text" placeholder="请填写物流信息" class="col-sm-4" ng-model="order.traffic_info">
-            <button ng-click="createInbound({traffic_info: order.traffic_info})">确认已发货</button>
-        </div>
-        <!--<div class="col-sm-12" ng-if="order.status === '5'">-->
-            <!--<a href="#" ui-sref=".inboundCreate()" class="btn btn-primary">创建入库单</a>-->
-        <!--</div>-->
     </div>
     <div class="row" ui-view=""></div>
 </section>

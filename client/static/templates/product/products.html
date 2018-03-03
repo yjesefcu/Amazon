@@ -9,13 +9,18 @@
             <!-- general form elements -->
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title"><a type="button" ui-sref="index.productEdit" class="btn btn-block btn-primary">添加商品信息</a></h3>
+                    <h3 class="box-title">
+                        <a type="button" ui-sref="index.productEdit" class="btn btn-primary"><i class="fa fa-plus"></i>添加商品信息</a>
+                        <a type="button" ng-click="createPurchasing()" class="btn btn-primary"><i class="fa fa-cart-arrow-down"></i> 采购</a>
+                        <a type="button" ng-click="createShipment()" class="btn btn-primary"><i class="fa fa-share"></i> 发货</a>
+                    </h3>
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body">
                     <table id="productTable" class="table table-bordered table-hover">
                         <thead>
                             <tr>
+                                <th><a href="javascript:void(0)" ng-click="cancelAllSelected()">取消所有</a></th>
                                 <th>序号</th>
                                 <th>SKU</th>
                                 <th>ASIN</th>
@@ -28,6 +33,7 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="p in products"table-repeat-directive>
+                                <td><input type="checkbox" ng-model="p.selected"></td>
                                 <td>{{ $index + 1 }}</td>
                                 <td><a ui-sref="index.productDetail({productId: p.id})">{{ p.SellerSKU }}</a></td>
                                 <td>{{ p.ASIN }}</td>

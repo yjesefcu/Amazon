@@ -26,10 +26,19 @@ class RoleNameSerializer(serializers.CharField):
             return '运营人员'
 
 
-class ContractSerializer(serializers.ModelSerializer):
+class PaymentRecordsSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Contract
+        model = PaymentRecord
+        fields = '__all__'
+
+
+class TrackingOrderItemsSerializer(serializers.ModelSerializer):
+
+    product = ProductSerializer()
+
+    class Meta:
+        model = TrackingOrderItems
         fields = '__all__'
 
 
@@ -41,10 +50,19 @@ class OrderStatusSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TrackingOrderSerializer(serializers.ModelSerializer):
+
+    items = TrackingOrderItemsSerializer(many=True)
+    status = OrderStatusSerializer()
+    status_id = serializers.IntegerField()
+
+    class Meta:
+        model = TrackingOrder
+        fields = '__all__'
+
+
 class PurchasingOrderSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
     create_time = DateTimeFormat(read_only=True)
-    contract = ContractSerializer(read_only=True)
     status = OrderStatusSerializer()
     status_id = serializers.IntegerField()
 
@@ -53,10 +71,23 @@ class PurchasingOrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class InboundSerializer(serializers.ModelSerializer):
-    inbound_time = DateTimeFormat()
-    status = OrderStatusSerializer()
+class PurchasingOrderItemSeriazlier(serializers.ModelSerializer):
+    product = ProductSerializer()
 
     class Meta:
-        model = InboundProducts
+        model = PurchasingOrderItems
         fields = '__all__'
+
+
+class PurchasingOrderDetailSerializer(serializers.ModelSerializer):
+    create_time = DateTimeFormat(read_only=True)
+    status = OrderStatusSerializer()
+    status_id = serializers.IntegerField()
+    items = PurchasingOrderItemSeriazlier(many=True)
+    payments = PaymentRecordsSerializer(many=True)
+
+    class Meta:
+        model = PurchasingOrder
+        fields = '__all__'
+
+

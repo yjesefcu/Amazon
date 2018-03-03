@@ -17,6 +17,7 @@
                         <thead>
                             <tr>
                                 <th>序号</th>
+                                <th>合同单号</th>
                                 <th>商品SKU</th>
                                 <th>图片</th>
                                 <th>采购日期</th>
@@ -31,16 +32,22 @@
                         <tbody>
                             <tr ng-repeat="p in orders"table-repeat-directive>
                                 <td><a href="#" ui-sref="index.purchasingDetail({orderId: p.id})"> {{ $index + 1 }}</a></td>
+                                <td>{{ p.contract.contract_number }}</td>
                                 <td>{{ p.SellerSKU }}</td>
                                 <td><img ng-src="{{ p.product.Image }}"</td>
                                 <td>{{ p.create_time }}</td>
                                 <td>{{p.price}}</td>
                                 <td>{{p.count}}</td>
                                 <td>{{ p.received_count }}</td>
-                                <td>{{ p.status.name }}</td>
+                                <td>
+                                    {{ p.status.name }}
+                                    <span ng-if="p.status.code==='WaitForDepositPayed' || p.status.code==='WaitForPaying'">:{{ p.next_to_pay }}</span>
+                                </td>
                                 <td>{{ p.status.role_name }}</td>
                                 <td>
-                                    <a href="#" ui-sref="index.purchasingDetail({orderId: p.id})" ng-if="p.canEdit">处理</a>
+                                    <a ui-sref="index.purchasingDetail({orderId: p.id})" ng-if="p.canEdit">处理</a>
+                                    <a class="fa fa-pencil" ui-sref="index.purchasingDetail({orderId: p.id})"
+                                       ng-if="userRole==='godown_manager' && p.status.code==='WaitForDepositPayed'" title="修改"></a>
                                 </td>
                             </tr>
                         </tbody>

@@ -36,7 +36,7 @@ html,body,body>.wrapper{
 
 table input{
   line-height: 24px;
-  border: #eee 1px solid;
+  border: #dadada 1px solid;
   /*outline: none;*/
 }
 table textarea{
@@ -86,4 +86,10 @@ table input{
   left:500px;
   max-height: 250px;
   overflow-y: auto;
+}
+.short-input{
+  width: 60px;
+}
+.table-llg.modal-lg{
+  width: 1080px !important;
 }

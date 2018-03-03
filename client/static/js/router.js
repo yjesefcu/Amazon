@@ -6,8 +6,6 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
     $stateProvider
         .state('index', {
             url:'/'
-            // templateUrl: 'index.html',
-            // controller: 'HomeCtrl'
         })
         .state('index.users', {
             url:'users',
@@ -50,7 +48,10 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
         })
         .state('index.createShipment', {
             url: 'shipment/create',
-            templateUrl: '/static/templates/shipment/shipment_create.html'
+            templateUrl: '/static/templates/shipment/shipment_create.html',
+            data: {
+                products: []
+            }
         })
         .state('index.createShipOversea', {
             url: 'shipment/create/:by',
@@ -81,7 +82,10 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
         })
         .state('index.purchasingCreate', {
             url: 'purchasing/create',
-            templateUrl: 'static/templates/purchasing/order_create.html'
+            templateUrl: 'static/templates/purchasing/order_create.html',
+            params: {
+                products: []
+            }
         })
         .state('index.purchasingDetail', {
             url: 'purchasing/:orderId',
@@ -89,8 +93,7 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
         })
         .state('index.purchasingDetail.inboundCreate', {
             url: '/addInbound',
-            templateUrl: 'static/templates/purchasing/create_inbound.html',
-
+            templateUrl: 'static/templates/purchasing/create_inbound.html'
         })
     ;
 }]);

@@ -11,7 +11,7 @@ class OrderStatus(models.Model):
     WaitForPaying = 3           # 等待财务尾款打款
     WaitForTraffic = 4          # 等待采购员补充物流信息
     WaitForInbound = 5          # 等待仓库入库
-    WaitForCheck = 6
+    WaitForCheck = 6            # 等待采购确认
     WaitForTrafficFeePayed = 7  # 等待物流费打款
     FINISH = 8                  # 完成
     WaitForPack = 100           # 移库：等待打包
@@ -25,7 +25,11 @@ class OrderStatus(models.Model):
     permissions = models.CharField(max_length=100, null=True, blank=True)  # 当处于这个状态时，需要的权限是什么
 
 
-class Contract(models.Model):
+class PurchasingOrder(models.Model):
+    # 采购单中每个商品的详情
+    # order = models.ForeignKey(PurchasingOrder, related_name='items')
+    MarketplaceId = models.CharField(max_length=50)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='children')       # 如果parent不为空，说明是子采购单
     # 采购单合同
     contract_number = models.CharField(max_length=100)    # 合同号
     supplier = models.CharField(max_length=255)           # 供应商
@@ -34,21 +38,10 @@ class Contract(models.Model):
     traffic_comment = models.CharField(max_length=255, null=True, blank=True)   # 物流说明
     operator = models.CharField(max_length=100, null=True, blank=True)          # 经办人
 
-
-class PurchasingOrder(models.Model):
-    # 采购单中每个商品的详情
-    # order = models.ForeignKey(PurchasingOrder, related_name='items')
-    MarketplaceId = models.CharField(max_length=50)
-    contract = models.ForeignKey(Contract)
-    product = models.ForeignKey(Product, related_name='purchasing_orders')
-    parent = models.ForeignKey('self', null=True, blank=True, related_name='children')       # 如果parent不为空，说明是子采购单
-    SellerSKU = models.CharField(max_length=50)
-    name = models.CharField(max_length=255, null=True, blank=True)      # 商品名称
+    # 订单信息
     creator = models.ForeignKey(User, null=True, blank=True)                   # 采购单创建人
     create_time = models.DateTimeField(null=True, blank=True)   # 采购单创建时间
     status = models.ForeignKey(OrderStatus)      # 采购单状态
-    count = models.IntegerField(null=True, blank=True)      # 数量
-    price = models.FloatField(null=True, blank=True)   # 采购单价
     total_price = models.FloatField(null=True, blank=True)  # 商品总价
     traffic_fee = models.FloatField(null=True, blank=True)  # 物流费
     other_fee = models.FloatField(null=True, blank=True)    # 杂费
@@ -58,30 +51,79 @@ class PurchasingOrder(models.Model):
     other_fee_payed = models.FloatField(null=True, blank=True)      # 已缴纳的杂费
     final_payment_payed = models.FloatField(null=True, blank=True)  # 已交尾款
     expect_date = models.DateField(null=True, blank=True)   # 交期
+
+    # 数量相关
+    count = models.IntegerField(null=True, blank=True, default=0)       # 采购数量
+    expect_count = models.IntegerField(null=True, blank=True, default=0)    # 已发货数量
+    received_count = models.IntegerField(null=True, blank=True, default=0)    # 已到货数量
+    damage_count = models.IntegerField(null=True, blank=True, default=0)    # 损坏数量
+
+    # 费用相关
+    next_to_pay = models.FloatField(null=True, blank=True)      # 下一步需要支付的数额
+    total_payed = models.FloatField(null=True, blank=True)      # 总支付的数额
+    next_payment_comment = models.TextField(max_length=255, null=True, blank=True)  # 支付说明
+
+
+class PurchasingOrderItems(models.Model):
+    order = models.ForeignKey(PurchasingOrder, related_name='items')
+    product = models.ForeignKey(Product, related_name='purchasing_orders')
+    SellerSKU = models.CharField(max_length=50)
+    name = models.CharField(max_length=255, null=True, blank=True)      # 商品名称
+    # 采购信息
+    total_price = models.FloatField(null=True, blank=True)  # 商品总价
+    count = models.IntegerField(null=True, blank=True)      # 数量
+    price = models.FloatField(null=True, blank=True)   # 采购单价
+    expect_count = models.IntegerField(null=True, blank=True, default=0)    # 已发货数量
+    received_count = models.IntegerField(null=True, blank=True, default=0)    # 已到货数量
+    damage_count = models.IntegerField(null=True, blank=True, default=0)    # 损坏数量
+    # 费用
+    total_fee = models.FloatField(null=True, blank=True)    # 总费用
+    traffic_fee = models.FloatField(null=True, blank=True)  # 物流费
+    other_fee = models.FloatField(null=True, blank=True)    # 杂费
     unit_price = models.FloatField(null=True, blank=True)   # 最终单价=（数量*单价+物流费+杂费）/数量
-    # 入库
-    received_count = models.IntegerField(null=True, blank=True)     # 已入库数量
 
 
-class FinanceRecord(models.Model):
-    # 费用缴纳记录
-    order = models.ForeignKey(PurchasingOrder)
-    fee_type = models.CharField(max_length=20)      # 费用类型：deposit(预付款)，traffic_fee, other_fee, principal(商品付款)
-    need_payed = models.FloatField()        # 需付款数
-    payed = models.FloatField()             # 实际付款数
-    pay_time = models.DateTimeField()       # 付款时间
-    creator = models.ForeignKey(User)       # 付款人
+class OrderFee(models.Model):
+    # 订单付款记录
+    order = models.ForeignKey(PurchasingOrder, related_name='fee_records')
+    fee = models.FloatField()
+    create_time = models.DateTimeField()
+    comment = models.CharField(max_length=255, null=True, blank=True)
 
 
-class InboundProducts(models.Model):
-    # 已入库商品
-    order = models.ForeignKey(PurchasingOrder, related_name='inbounds')
-    product = models.ForeignKey(Product)
+class TrackingOrder(models.Model):
+    # 物流单
+    purchasing_order = models.ForeignKey(PurchasingOrder, related_name='inbounds')
     shipping_date = models.DateField()      # 发货时间
-    traffic_info = models.CharField(max_length=255, null=True, blank=True)      # 物流信息
-    count = models.IntegerField(null=True, blank=True)
-    inbound_time = models.DateTimeField(null=True, blank=True)   # 入库时间
+    input_date = models.DateField(null=True, blank=True)   # 到货日期
+    tracking_company = models.CharField(max_length=255, null=True, blank=True)      # 物流公司
+    tracking_number = models.CharField(max_length=255, null=True, blank=True)      # 物流单号
     traffic_fee = models.FloatField(null=True, blank=True)      # 物流费
     traffic_fee_payed = models.FloatField(null=True, blank=True)    # 已缴纳的物流费
     status = models.ForeignKey(OrderStatus)
-    # payment = models.FloatField(null=True, blank=True, default=0)
+    expect_count = models.IntegerField(null=True, blank=True)    # 已发货数量
+    received_count = models.IntegerField(null=True, blank=True, default=0)    # 已到货数量
+    damage_count = models.IntegerField(null=True, blank=True, default=0)    # 损坏数量
+
+
+class TrackingOrderItems(models.Model):
+    purchasing_order = models.ForeignKey(PurchasingOrder)
+    traffic_order = models.ForeignKey(TrackingOrder, related_name='items')
+    shipping_date = models.DateField(null=True, blank=True)      # 发货时间
+    input_date = models.DateField(null=True, blank=True)   # 到货日期
+    product = models.ForeignKey(Product)
+    expect_count = models.IntegerField(null=True, blank=True)       # 发货数量
+    received_count = models.IntegerField(null=True, blank=True, default=0)    # 实际到货数据
+    damage_count = models.IntegerField(null=True, blank=True, default=0)    # 损坏数量
+
+
+class PaymentRecord(models.Model):
+    # 费用缴纳记录
+    order = models.ForeignKey(PurchasingOrder, related_name='payments')
+    traffic_order = models.ForeignKey(TrackingOrder, null=True, blank=True)
+    need_payed = models.FloatField()        # 需付款数
+    payed = models.FloatField()             # 实际付款数
+    pay_time = models.DateTimeField()       # 付款时间
+    creator = models.ForeignKey(User, null=True, blank=True)       # 付款人
+    payment_comment = models.CharField(max_length=100, null=True, blank=True)   # 支付说明
+

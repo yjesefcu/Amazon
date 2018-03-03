@@ -2,8 +2,9 @@
 /**
  * Created by liucaiyun on 2017/5/22.
  */
-app.controller('ProductCtrl', function($scope, $http, $rootScope, $uibModal, $location, serviceFactory) {
+app.controller('ProductCtrl', function($scope, $http, $rootScope, $uibModal, $location, $state, serviceFactory) {
     $scope.products = [];
+    $scope.selectedProducts = {};
     $http.get(serviceFactory.getAllProducts(), {
         params: {
             MarketplaceId: $rootScope.MarketplaceId,
@@ -27,8 +28,32 @@ app.controller('ProductCtrl', function($scope, $http, $rootScope, $uibModal, $lo
                 }
             }
         });
+    };
+
+    $scope.cancelAllSelected = function () {
+        $scope.products.forEach(function (n) {
+           n.selected = false;
+        });
+    };
+
+    $scope.createPurchasing = function () {
+        var products = getProducts();
+        $state.go('index.purchasingCreate', {products: products});
+    };
+
+    $scope.createShipment = function () {
 
     };
+
+    function getProducts() {
+        var products = [];
+        $scope.products.forEach(function (n) {
+            if (n.selected) {
+                products.push(n);
+            }
+        });
+        return products;
+    }
 });
 
 //模态框对应的Controller
