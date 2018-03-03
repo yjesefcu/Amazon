@@ -28,6 +28,8 @@ class RoleNameSerializer(serializers.CharField):
 
 class PaymentRecordsSerializer(serializers.ModelSerializer):
 
+    pay_time = DateTimeFormat()
+
     class Meta:
         model = PaymentRecord
         fields = '__all__'

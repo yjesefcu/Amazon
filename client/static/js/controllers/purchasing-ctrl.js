@@ -126,7 +126,7 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
             $scope.order = result.data;
             $scope.product = result.data.product;
             var status_id = $scope.order.status.id;
-            if ($rootScope.userRole === 'purchasing' && (status_id > 3 && status_id != 8))  // 只有财务才能添加物流
+            if ($rootScope.userRole === 'purchasing_agent' && (status_id > 3 && status_id != 8))  // 只有财务才能添加物流
             {
                 $scope.canCreate = true;
             }
@@ -154,6 +154,17 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
 
     init();
 
+    $scope.gotoNextStep = function (status_id) {     // 提交到下一步
+        $http.patch('/api/purchasing/' + $scope.order.id + '/', {
+            status_id: status_id
+        }).then(function (result) {
+            $rootScope.addAlert('success', '提交成功');
+            init();
+        }).catch(function (exception) {
+            $rootScope.addAlert('error', '提交失败');
+        });
+    };
+
     $scope.openPayModal = function () {        // 支付确认对话框
         var modalInstance = $uibModal.open({
             templateUrl : '/static/templates/purchasing/payment_modal.html',//script标签中定义的id
@@ -170,6 +181,32 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
             $scope.refresh();
         });
     };
+
+    $scope.openInboudModal = function () {        // 打开创建入库信息的对话框
+        var modalInstance = $uibModal.open({
+            size: 'lg',
+            templateUrl : '/static/templates/purchasing/create_inbound.html',//script标签中定义的id
+            controller : 'PurchasingAddInboundCtrl',//modal对应的Controller
+            resolve : {
+                data : function() {//data作为modal的controller传入的参数
+                    var items = [];
+                    $scope.order.items.forEach(function (n) {
+                        if (n.received_count < n.count)     // 只有数量未全部到货的商品才需要
+                        {
+                            items.push(n);
+                        }
+                    });
+                    return {
+                        purchasingId: $scope.order.id,
+                        items: items
+                    };//用于传递数据
+                }
+            }
+        });
+        modalInstance.result.then(function (result) {
+            getInbounds();
+        });
+    };
 });
 
 
@@ -179,7 +216,8 @@ app.controller('PurchasingOrderPaymentCtrl', function ($scope, $http, $uibModalI
 
     $scope.save = function () {
         $http.post('/api/purchasing/' + $scope.order.id + '/payed/', {
-            fee: $scope.fee
+            payed: $scope.fee,
+            payment_comment: $scope.payment_comment
         }).then(function (result) {
             $rootScope.addAlert('info', '提交成功');
             $uibModalInstance.close();
@@ -213,40 +251,13 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
 
     init();
 
-    $scope.openInboudModal = function (id) {        // 打开创建入库信息的对话框
-        var modalInstance = $uibModal.open({
-            size: 'lg',
-            templateUrl : '/static/templates/purchasing/create_inbound.html',//script标签中定义的id
-            controller : 'PurchasingAddInboundCtrl',//modal对应的Controller
-            resolve : {
-                data : function() {//data作为modal的controller传入的参数
-                    var items = [];
-                    $scope.order.items.forEach(function (n) {
-                        if (n.received_count < n.count)     // 只有数量未全部到货的商品才需要
-                        {
-                            items.push(n);
-                        }
-                    });
-                    return {
-                        id: id,
-                        purchasingId: $scope.order.id,
-                        items: items
-                    };//用于传递数据
-                }
-            }
-        });
-        modalInstance.result.then(function (result) {
-            getInbounds();
-        });
-    };
-
     $scope.openInputModal = function (inboundOrder) {        // 打开创建入库信息的对话框
         var modalInstance = $uibModal.open({
             size: 'lg',
             templateUrl : '/static/templates/purchasing/inbound_input.html',//script标签中定义的id
             controller : 'PurchasingInputCtrl',//modal对应的Controller
             resolve : {
-                data : function() {//data作为modal的controller传入的参数
+                data : function() {     //data作为modal的controller传入的参数
 
                     return {
                         order: inboundOrder
@@ -282,6 +293,10 @@ app.controller('PurchasingAddInboundCtrl', function ($scope, $http, $rootScope, 
     $scope.items = data.items;
     $scope.order = {};
     $scope.error = '';
+
+    $scope.items.forEach(function (n) {
+        n.expect_count = 0;
+    });
 
     $scope.inputChange = function () {
         $scope.error = '';
@@ -372,7 +387,8 @@ app.controller('InboundTrafficFeeConfirmCtrl', function ($scope, $http, $uibModa
 
     $scope.submit = function () {
         $http.post('/api/inbounds/' + $scope.order.id + '/payed/', {
-            traffic_fee_payed: $scope.traffic_fee_payed
+            traffic_fee_payed: $scope.traffic_fee_payed,
+            payment_comment: $scope.payment_comment
         }).then(function (result) {
             $rootScope.addAlert('info', '提交成功');
             $uibModalInstance.close();

@@ -27,7 +27,7 @@
                     <th>图片</th>
                     <th>预定数量</th>
                     <th>已入库数量</th>
-                    <th>发货数量</th>
+                    <th>本次发货数量</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,9 +35,7 @@
                     <td>{{ item.product.SellerSKU }}</td>
                     <td><img ng-src="{{ item.product.Image }}"> </td>
                     <td>{{ item.count }}</td>
-                    <td>
-                        {{ item.received_count }}
-                    </td>
+                    <td>{{ item.received_count }}</td>
                     <td>
                         <input type="text" ng-model="item.expect_count" class="short-input">
                     </td>

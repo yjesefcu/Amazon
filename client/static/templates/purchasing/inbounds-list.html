@@ -5,7 +5,6 @@
         <div class="box box-primary">
             <div class="box-header with-border">
                 <h3 class="box-title">物流历史
-                    <a type="button" class="btn btn-primary" ng-click="openInboudModal()" ng-if="canCreate"><i class="fa fa-plus"></i>添加物流信息</a>
                 </h3>
             </div>
             <!-- /.box-header -->
@@ -20,6 +19,7 @@
                         <th>实际到货数量</th>
                         <th>损坏数量</th>
                         <th>状态</th>
+                        <th>当前处理人</th>
                         <th>操作</th>
                     </tr>
                     </thead>
@@ -32,6 +32,7 @@
                         <td>{{ p.received_count }}</td>
                         <td>{{p.damage_count}}</td>
                         <td>{{ p.status.name }}</td>
+                        <td>{{ p.statuc.role_name }}</td>
                         <td>
                             <a href="javascript:void(0)" ng-click="openInputModal(p)" ng-if="p.status.code==='WaitForInbound'">入库</a>
                             <a href="javascript:void(0)" ng-click="openPayModal(p)" ng-if="userRole===p.status.role && p.status.code === 'WaitForTrafficFeePayed'">打款</a>

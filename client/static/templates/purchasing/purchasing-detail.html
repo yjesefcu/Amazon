@@ -34,7 +34,13 @@
                     <span >采购人员：</span><span>{{order.creator}}</span>
                 </div>
                 <div class="form-group col-sm-3 col-xs-6">
-                    <span >预计交换日期：</span><span>{{order.expect_date}}</span>
+                    <span >预计交货日期：</span><span>{{order.expect_date}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >订单状态：</span><span>{{order.status.name}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >当前责任人：</span><span>{{order.status.role_name}}</span>
                 </div>
             </div>
 
@@ -54,12 +60,12 @@
                 <div class="form-group col-sm-3 col-xs-6">
                     <span >预付款：</span><span>{{order.deposit}}元</span>
                     <a class="btn btn-primary" href="javascript:void(0)" ng-click="openPayModal()"
-                       ng-hide="userRole==='finance' && order.status.code==='WaitForDepositPayed'">支付</a>
+                       ng-if="userRole==='finance' && order.status.code==='WaitForDepositPayed'">支付</a>
                 </div>
                 <div class="form-group col-sm-3 col-xs-6">
                     <span >尾款：</span><span>{{order.total_price-order.deposit}}元</span>
                     <a class="btn btn-primary" href="javascript:void(0)" ng-click="openPayModal()"
-                       ng-hide="userRole==='finance' && order.status.code==='WaitForPaying'">支付</a>
+                       ng-if="userRole==='finance' && order.status.code==='WaitForPaying'">支付</a>
                 </div>
                 <div class="form-group col-sm-3 col-xs-6">
                     <span>运费：</span><span>{{order.traffic_fee}}元</span>
@@ -80,6 +86,13 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+    <div style="padding: 0 0px 8px 16px;">
+        <div class="row">
+            <a class="btn btn-primary" href="" ng-click="gotoNextStep(3)"
+               ng-if="order.status.code === 'WaitForProducing' && order.status.role === userRole">生产完成，提交财务打尾款</a>
+            <a type="button" class="btn btn-primary" ng-click="openInboudModal()" ng-if="canCreate"><i class="fa fa-plus"></i>添加物流信息</a>
         </div>
     </div>
     <!-- /.box -->
@@ -109,7 +122,7 @@
                         <tbody>
                         <tr ng-repeat="p in order.items">
                             <td>{{ p.SellerSKU }}</td>
-                            <td><img ng-src="{{ p.product.Image }}"> </td>
+                            <td><!--<img ng-src="{{ p.product.Image }}"> --></td>
                             <td>{{p.product.TitleCn}}</td>
                             <td>{{ p.count}}</td>
                             <td>{{ p.price }}</td>
@@ -140,7 +153,10 @@
                     <span >支付数额：</span><span>{{p.payed}}元</span>
                 </div>
                 <div class="form-group col-sm-3 col-xs-6">
-                    <span >说明：</span><span>{{p.payment_comment}}</span>
+                    <span >款项说明：</span><span>{{p.fee_comment}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
+                    <span >备注：</span><span>{{p.payment_comment}}</span>
                 </div>
             </div>
 
