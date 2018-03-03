@@ -153,6 +153,44 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
     };
 
     init();
+
+    $scope.openPayModal = function () {        // 支付确认对话框
+        var modalInstance = $uibModal.open({
+            templateUrl : '/static/templates/purchasing/payment_modal.html',//script标签中定义的id
+            controller : 'PurchasingOrderPaymentCtrl',//modal对应的Controller
+            resolve : {
+                data : function() {//data作为modal的controller传入的参数
+                    return {
+                        order: $scope.order
+                    };//用于传递数据
+                }
+            }
+        });
+        modalInstance.result.then(function (result) {
+            $scope.refresh();
+        });
+    };
+});
+
+
+// 订单付款对话框
+app.controller('PurchasingOrderPaymentCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
+    $scope.order = data.order;
+
+    $scope.save = function () {
+        $http.post('/api/purchasing/' + $scope.order.id + '/payed/', {
+            fee: $scope.fee
+        }).then(function (result) {
+            $rootScope.addAlert('info', '提交成功');
+            $uibModalInstance.close();
+        }).catch(function (error) {
+            $rootScope.addAlert('error', '提交失败');
+        });
+    };
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
+    };
 });
 
 // 采购单的物流单
@@ -250,10 +288,6 @@ app.controller('PurchasingAddInboundCtrl', function ($scope, $http, $rootScope, 
     };
 
     $scope.save = function () {
-        // if (!checkFormValid()) {
-        //     $scope.error = '无法提交：请确认商品尺寸等信息填写完整';
-        //     return;
-        // }
         var items = [];
         $scope.items.forEach(function (n) {
             if (n.expect_count) {
@@ -327,6 +361,10 @@ app.controller('PurchasingInputCtrl', function ($scope, $http, $rootScope, $stat
             $rootScope.addAlert('error', '提交失败');
         });
     };
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
+    };
 });
 
 app.controller('InboundTrafficFeeConfirmCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
@@ -341,5 +379,9 @@ app.controller('InboundTrafficFeeConfirmCtrl', function ($scope, $http, $uibModa
         }).catch(function (error) {
             $rootScope.addAlert('error', '提交失败');
         });
+    };
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
     };
 });

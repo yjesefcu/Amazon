@@ -121,9 +121,10 @@ class PaymentRecord(models.Model):
     # 费用缴纳记录
     order = models.ForeignKey(PurchasingOrder, related_name='payments')
     traffic_order = models.ForeignKey(TrackingOrder, null=True, blank=True)
-    need_payed = models.FloatField()        # 需付款数
+    need_payed = models.FloatField(null=True, blank=True)        # 需付款数
     payed = models.FloatField()             # 实际付款数
     pay_time = models.DateTimeField()       # 付款时间
     creator = models.ForeignKey(User, null=True, blank=True)       # 付款人
-    payment_comment = models.CharField(max_length=100, null=True, blank=True)   # 支付说明
+    fee_comment = models.CharField(max_length=100, null=True, blank=True)   # 款项说明
+    payment_comment = models.CharField(max_length=255, null=True, blank=True)   # 支付说明
 
