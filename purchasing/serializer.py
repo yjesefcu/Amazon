@@ -1,8 +1,12 @@
 #-*- coding:utf-8 -*-
 __author__ = 'liucaiyun'
+import pytz, datetime
 from rest_framework import serializers
 from products.serializer import ProductSerializer
 from models import *
+
+
+TZ_ASIA = pytz.timezone('Asia/Shanghai')
 
 
 class DateTimeFormat(serializers.DateTimeField):
@@ -10,7 +14,7 @@ class DateTimeFormat(serializers.DateTimeField):
     def to_representation(self, value):
         if not value:
             return ''
-        return value.strftime('%Y-%m-%d %H:%M')
+        return (value + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M')
 
 
 class FloatRoundField(serializers.FloatField):

@@ -176,9 +176,9 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     # 更新每一个商品的发货数量
                     pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
                     if pitem.expect_count:
-                        pitem.expect_count += titem.expect_count
+                        pitem.expect_count += to_int(titem.expect_count)
                     else:
-                        pitem.expect_count = titem.expect_count
+                        pitem.expect_count = to_int(titem.expect_count)
                     pitem.save()
                 inbound.expect_count = count
                 inbound.save()
@@ -237,6 +237,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 # 更新物流总数据
                 add_int(instance, 'received_count', received_count)
                 add_int(instance, 'damage_count', damage_count)
+                instance.expect_count -= received_count
                 instance.traffic_fee = data.get('traffic_fee')
                 instance.input_date = input_date
                 instance.status_id = status_id

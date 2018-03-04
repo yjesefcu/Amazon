@@ -22,6 +22,7 @@
                                 <th style="width: 200px;">SKU</th>
                                 <th>图片</th>
                                 <th>商品名称</th>
+                                <th>库存</th>
                                 <th>发货数量</th>
                                 <th>操作</th>
                             </tr>
@@ -45,6 +46,7 @@
                                 </td>
                                 <td><img ng-src="{{ p.product.Image }}" ng-if="p.product.Image"></td>
                                 <td style="word-wrap:break-word;width: 250px;">{{ p.product.TitleCn }}</td>
+                                <td>{{ p.product.domestic_inventory }}</td>
                                 <td><input class="lg" ng-model="p.count"></td>
                                 <td><a class="fa fa-trash-o text-red" ng-click="removeItem($index);" title="删除该记录"></a></td>
                             </tr>
