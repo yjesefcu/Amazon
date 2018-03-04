@@ -131,7 +131,7 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
         // getSupplies($scope.productId);
         // getShipments($scope.productId);
         getSettlements($scope.productId);
-        getPurchasingOrders($scope.productId);
+        // getPurchasingOrders($scope.productId);
     }
     $scope.submitForm = function () {
         var url = serviceFactory.createProduct(), method='post';
