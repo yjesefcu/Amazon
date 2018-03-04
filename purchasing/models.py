@@ -16,7 +16,7 @@ class OrderStatus(models.Model):
     FINISH = 8                  # 完成
     WaitForPack = 100           # 移库：等待打包
     WaitForSettle = 101         # 移库：等待结账
-    ShipmentFinish = 102        # 移库：已完成
+    ShipmentFinish = 102        # 移库：已关闭
 
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=50)

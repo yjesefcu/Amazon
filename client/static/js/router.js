@@ -47,9 +47,9 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
             templateUrl: '/static/templates/shipment/supply-create.html'
         })
         .state('index.createShipment', {
-            url: 'shipment/create',
+            url: 'shipment/create/:id',
             templateUrl: '/static/templates/shipment/shipment_create.html',
-            data: {
+            params: {
                 products: []
             }
         })

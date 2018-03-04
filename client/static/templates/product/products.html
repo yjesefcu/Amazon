@@ -11,8 +11,8 @@
                 <div class="box-header with-border">
                     <h3 class="box-title">
                         <a type="button" ui-sref="index.productEdit" class="btn btn-primary"><i class="fa fa-plus"></i>添加商品信息</a>
-                        <a type="button" ng-click="createPurchasing()" class="btn btn-primary"><i class="fa fa-cart-arrow-down"></i> 采购</a>
-                        <a type="button" ng-click="createShipment()" class="btn btn-primary"><i class="fa fa-share"></i> 发货</a>
+                        <a type="button" ng-click="createPurchasing()" class="btn btn-primary" ng-if="userRole==='purchasing_agent'"><i class="fa fa-cart-arrow-down"></i> 采购</a>
+                        <a type="button" ng-click="createShipment()" class="btn btn-primary" ng-if="userRole==='operator'"><i class="fa fa-share"></i> 发货</a>
                     </h3>
                 </div>
                 <!-- /.box-header -->

@@ -4,13 +4,13 @@
         创建移库记录（国内->亚马逊）
     </h1>
 </section>
-<section class="content" ng-controller="OutboundEditCtrl">
+<section class="content" ng-controller="ShipmentCreateCtrl">
     <div class="row">
         <div class="col-sm-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
                     <h3 class="box-title">本次发货的商品信息
-                        <button class="btn btn-primary" ng-click="addProductRow();">添加商品</button>
+                        <button class="btn btn-primary" ng-click="addItem();">添加商品</button>
                     </h3>
                 </div>
                 <!-- /.box-header -->
@@ -46,7 +46,7 @@
                                 <td><img ng-src="{{ p.product.Image }}" ng-if="p.product.Image"></td>
                                 <td style="word-wrap:break-word;width: 250px;">{{ p.product.TitleCn }}</td>
                                 <td><input class="lg" ng-model="p.count"></td>
-                                <td><a class="fa fa-trash-o text-red" ng-click="remove($index);" title="删除该记录？"></a></td>
+                                <td><a class="fa fa-trash-o text-red" ng-click="removeItem($index);" title="删除该记录"></a></td>
                             </tr>
                         </tbody>
                     </table>
@@ -54,5 +54,11 @@
             </div>
         </div>
     </div>
-    <button class="btn btn-primary" ng-click="save();">保存</button>
+    <button class="btn btn-primary" ng-click="save();" ng-if="!id">保存</button>
+    <div class="row" ng-if="userRole==='operator' && formData.status.code==='WaitForPack' && id">
+        <div class="col col-md-12">
+            <button ng-click="delete()" class="btn btn-danger"><i class="fa fa-trash-o"></i>删除</button>
+            <button ng-click="save()" class="btn btn-primary">保存</button>
+        </div>
+    </div>
 </section>

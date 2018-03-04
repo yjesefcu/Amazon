@@ -72,29 +72,37 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         data['next_payment_comment'] = u'预付款'
         data['status_id'] = OrderStatus.WaitForDepositPayed
         data['create_time'] = create_time
-        if 'id' in data:
+        exist_order_id = data.get('id')
+        if exist_order_id:
             del data['id']
             del data['status']
             del data['payments']
-        order = PurchasingOrder.objects.create(**data)
-        count = 0
-        total_price = 0
-        for d in items:
-            product_id = d.get('product').get("id")
-            price = int(d.get('count')) * float(d.get('price'))
-            if 'product' in d:
-                del d['product']
-            if 'id' in d:
-                del d['id']
-            d['product_id'] = product_id
-            d['total_price'] = price
-            d['order'] = order
-            poi = PurchasingOrderItems.objects.create(**d)
-            count += to_int(poi.count)
-            total_price += poi.total_price
-        order.count = count
-        order.total_price = total_price
-        order.save()
+        try:
+            with transaction.atomic():
+                order = PurchasingOrder.objects.create(**data)
+                count = 0
+                total_price = 0
+                for d in items:
+                    product_id = d.get('product').get("id")
+                    price = int(d.get('count')) * float(d.get('price'))
+                    if 'product' in d:
+                        del d['product']
+                    if 'id' in d:
+                        del d['id']
+                    d['product_id'] = product_id
+                    d['total_price'] = price
+                    d['order'] = order
+                    poi = PurchasingOrderItems.objects.create(**d)
+                    count += to_int(poi.count)
+                    total_price += poi.total_price
+                order.count = count
+                order.total_price = total_price
+                order.save()
+                # 如果编辑的话，需要删除老的采购单信息
+                if exist_order_id:
+                    PurchasingOrder.objects.get(pk=exist_order_id).delete()
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
         headers = self.get_success_headers(self.get_serializer(order).data)
         return Response(self.get_serializer(order).data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -118,7 +126,7 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
     @detail_route(methods=['post'])
     def payed(self, request, pk, **kwargs):
         order = self.get_object()
-        fee = to_float(request.data.get('fee'))
+        fee = to_float(request.data.get('payed'))
         order.next_to_pay -= fee
         add_float(order, 'total_payed', fee)
         fee_comment = ''
@@ -249,7 +257,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
 
     def _split_traffic_fee(self, traffic_order):
         # 将运费平摊到每个商品上面
-        items = traffic_order.items
+        items = traffic_order.items.all()
         # 按商品的重量*数量进行平摊
         total_weight = 0
         for item in items:

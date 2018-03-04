@@ -38,11 +38,12 @@ app.controller('ProductCtrl', function($scope, $http, $rootScope, $uibModal, $lo
 
     $scope.createPurchasing = function () {
         var products = getProducts();
-        $state.go('index.purchasingCreate', {products: products});
+        $state.go('index.purchasingCreate', {id: '', products: products});
     };
 
     $scope.createShipment = function () {
-
+        var products = getProducts();
+        $state.go('index.createShipment', {id:'', products: products});
     };
 
     function getProducts() {

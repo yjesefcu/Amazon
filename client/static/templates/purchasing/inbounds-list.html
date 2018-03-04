@@ -32,9 +32,9 @@
                         <td>{{ p.received_count }}</td>
                         <td>{{p.damage_count}}</td>
                         <td>{{ p.status.name }}</td>
-                        <td>{{ p.statuc.role_name }}</td>
+                        <td>{{ p.status.role_name }}</td>
                         <td>
-                            <a href="javascript:void(0)" ng-click="openInputModal(p)" ng-if="p.status.code==='WaitForInbound'">入库</a>
+                            <a href="javascript:void(0)" ng-click="openInputModal(p)" ng-if="p.status.code==='WaitForInbound' && userRole===p.status.role">入库</a>
                             <a href="javascript:void(0)" ng-click="openPayModal(p)" ng-if="userRole===p.status.role && p.status.code === 'WaitForTrafficFeePayed'">打款</a>
                         </td>
                     </tr>

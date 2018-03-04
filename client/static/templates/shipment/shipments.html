@@ -14,7 +14,7 @@
                         <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipOversea({by: 'sea'})">添加空运货件</a>
                         <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipOversea({by: 'air'})">添加海运货件</a>
                         -->
-                        <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipment()"
+                        <a class="btn btn-primary" style="margin-left: 24px;" ui-sref="index.createShipment({id:''})"
                            ng-if="userRole === 'operator'">发货</a>
                     </h3>
                 </div>
@@ -28,12 +28,11 @@
                             <th>创建时间</th>
                             <th>箱子数量</th>
                             <th>实际发货商品数量</th>
-                            <th>总运费({{ currency }})</th>
-                            <th>总关税({{ currency }})</th>
+                            <th>总运费(元)</th>
+                            <th>总关税(元)</th>
                             <th>状态</th>
                             <th>当前处理人</th>
-                            <th ng-if="userRole==='godown_manager'">操作</th>
-                            <!--<th>操作</th>-->
+                            <th>操作</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -47,8 +46,10 @@
                             <td>{{ os.tax_fee }}</td>
                             <td>{{ os.status.name }}</td>
                             <td>{{ os.status.role_name }}</td>
-                            <td ng-if="userRole === 'godown_manager'">
-                                <a class="fa fa-trash-o text-red" title="删除该记录" ng-click="deleteShipment($index,os.id)" ng-if="os.status.id==100"></a>
+                            <td>
+                                <a class="fa fa-pencil" title="编辑" ng-if="userRole === 'operator' && os.status.code==='WaitForPack'"
+                                   ui-sref="index.createShipment({id: os.id})"></a>
+                                <a ng-if="os.canEdit"ui-sref="index.shipmentDetail({id: os.id})">处理</a>
                             </td>
                         </tr>
                         </tbody>

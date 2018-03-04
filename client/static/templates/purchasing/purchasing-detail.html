@@ -93,6 +93,14 @@
             <a class="btn btn-primary" href="" ng-click="gotoNextStep(3)"
                ng-if="order.status.code === 'WaitForProducing' && order.status.role === userRole">生产完成，提交财务打尾款</a>
             <a type="button" class="btn btn-primary" ng-click="openInboudModal()" ng-if="canCreate"><i class="fa fa-plus"></i>添加物流信息</a>
+            <a class="btn btn-primary" ui-sref="index.purchasingCreate({id: order.id})" title="修改"
+                ng-if="userRole==='purchasing_agent' && order.status.code==='WaitForDepositPayed'">
+                <i class="fa fa-pencil"></i> 编辑
+            </a>
+            <a class="btn btn-warning" href="" ng-click="closeOrder()"
+                ng-if="userRole==='purchasing_agent' && order.status.code==='WaitForCheck'">
+                已全部入库，关闭采购单
+            </a>
         </div>
     </div>
     <!-- /.box -->
@@ -121,8 +129,8 @@
                         </thead>
                         <tbody>
                         <tr ng-repeat="p in order.items">
-                            <td>{{ p.SellerSKU }}</td>
-                            <td><!--<img ng-src="{{ p.product.Image }}"> --></td>
+                            <td><a ui-sref="index.productDetail({productId: p.id})">{{ p.SellerSKU }}</a></td>
+                            <td><img ng-src="{{ p.product.Image }}"></td>
                             <td>{{p.product.TitleCn}}</td>
                             <td>{{ p.count}}</td>
                             <td>{{ p.price }}</td>

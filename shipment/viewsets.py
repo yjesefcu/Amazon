@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from django_filters.rest_framework import DjangoFilterBackend
 from purchasing.models import OrderStatus
+from amazon_services.api import get_exchange_rate
 from models import *
 from serializer import *
 
@@ -48,18 +49,25 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
         data = request.data
         items_data = data.get('items')
         MarketplaceId = data.get('MarketplaceId')
-        order = ShipmentOrder.objects.create(MarketplaceId=MarketplaceId, create_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA))
-        count = 0
-        for item_data in items_data:
-            product = Product.objects.get(MarketplaceId=MarketplaceId, SellerSKU=item_data.get('SellerSKU'))
-            ShipmentOrderItem.objects.create(order=order, product=product, SellerSKU=item_data.get('SellerSKU'), count=item_data.get('count'))
-            count += int(item_data.get('count'))
-        order.count = count
-        order.product_count = len(items_data)
-        order.status_id = OrderStatus.WaitForPack
-        order.save()
-        serializer = self.get_serializer(order)
-        headers = self.get_success_headers(serializer.data)
+        try:
+            with transaction.atomic():
+                order = ShipmentOrder.objects.create(MarketplaceId=MarketplaceId, create_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA))
+                count = 0
+                for item_data in items_data:
+                    product = Product.objects.get(MarketplaceId=MarketplaceId, SellerSKU=item_data.get('SellerSKU'))
+                    ShipmentOrderItem.objects.create(order=order, product=product, SellerSKU=item_data.get('SellerSKU'), count=item_data.get('count'))
+                    count += int(item_data.get('count'))
+                order.count = count
+                order.product_count = len(items_data)
+                order.status_id = OrderStatus.WaitForPack
+                order.save()
+                serializer = self.get_serializer(order)
+                headers = self.get_success_headers(serializer.data)
+                # 如果是编辑保存的话， 那么删除原来的记录
+                if data.get('id'):
+                    ShipmentOrder.objects.get(pk=data.get('id')).delete()
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
@@ -126,14 +134,21 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 serializer.is_valid(raise_exception=True)
                 self.perform_update(serializer)
 
-                # 计算每个商品的费用
-                self._calc_item_fee(order, items)
+                # 更新商品的国内库存
+                self._update_product_inventory(items)
         except IntegrityError, ex:
             raise IntegrityError(ex)
         # order.save()
         serializer = self.get_serializer(order)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+
+    def _update_product_inventory(self, items):
+        # 更新商品库存
+        for item in items:
+            product = item.product
+            product.domestic_inventory = to_int(product.domestic_inventory) - item.boxed_count
+            product.save()
 
     @detail_route(methods=['patch'])
     def close(self, request, pk):
@@ -150,47 +165,70 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
             raise IntegrityError(ex)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def _update_product_unit_cost(self, item):
-        # 更新商品的单位成本和库存
+    def _calc_item_weight(self, ship_type, volume_args, item):
+        # 计算每个商品的体积重
         product = item.product
-        total_cost = to_int(product.amazon_inventory) * to_float(product.shipment_cost) + to_float(item.traffic_fee) + to_float(item.tax_fee)
-        count = to_int(product.amazon_inventory) + item.boxed_count
-        product.amazon_inventory = count
-        if count:
-            product.shipment_cost = total_cost / count
+        volume_weight = (product.package_width * product.package_height * product.package_length) / volume_args
+        if ship_type == 'sea':
+            unit_weight = max(volume_weight, to_float(product.package_weight))
         else:
-            product.shipment_cost = 0
-        # 总的平均成本
-        product.cost = product.shipment_cost + to_float(product.supply_cost)
-        product.save()
+            unit_weight = product.package_width * product.package_length * product.package_height / 1000000
+        item.volume_weight = volume_weight
+        item.unit_weight = unit_weight
+        return unit_weight
 
-    def _calc_item_fee(self, order, items):
+    @detail_route(methods=['post'])
+    def payed(self, request, pk, **kwargs):
+        order = self.get_object()
+        # 输入运费和关税
+        try:
+            with transaction.atomic():
+                traffic_fee = to_float(request.data.get('traffic_fee'))
+                tax_fee = to_float(request.data.get('tax_fee'))
+                order.traffic_fee = traffic_fee
+                order.tax_fee = tax_fee
+                order.status_id = OrderStatus.ShipmentFinish    # 关闭移库单
+                order.save()
+                # 计算每个商品的费用
+                self._calc_item_fee(order)
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
+        return Response(status=status.HTTP_200_OK)
+
+    def _calc_item_fee(self, order):
         # 计算每个商品的费用
         if not order.traffic_fee and not order.tax_fee:
             return
         # 将商品的总重量（=unit_weight*boxed_count），根据每个商品的总重量所在比例计算费用
         total_weight = 0
+        items = order.items.all()
         for item in items:
             total_weight += item.unit_weight * item.boxed_count
         for item in items:
             ratio = (item.unit_weight * item.boxed_count) / total_weight
-            if order.traffic_fee is not None:
+            if order.traffic_fee:
                 item.traffic_fee = ratio * order.traffic_fee
-            if order.tax_fee is not None:
+            if order.tax_fee:
                 item.tax_fee = ratio * order.tax_fee
             item.save()
+        for item in items:      # 更新商品单位成本
+            self._update_product_unit_cost(item)        # 更新商品的单位成本
 
-    def _calc_item_weight(self, ship_type, volume_args, item):
-        # 计算每个商品的体积重
+    def _update_product_unit_cost(self, item):
+        # 更新商品的单位成本和库存
         product = item.product
-        volume_weight = (product.width * product.height * product.length) / volume_args
-        if ship_type == 'sea':
-            unit_weight = max(volume_weight, to_float(product.weight))
+        new_cost = (to_float(item.traffic_fee) + to_float(item.tax_fee)) / get_exchange_rate()        # 需要除以汇率
+        total_cost = to_int(product.amazon_inventory) * to_float(product.shipment_cost) + new_cost
+        count = to_int(product.amazon_inventory) + item.boxed_count
+        product.amazon_inventory = count
+        # 需要除以汇率
+        if count:
+            product.shipment_cost = total_cost / count
         else:
-            unit_weight = product.width * product.length * product.height / 1000000
-        item.volume_weight = volume_weight
-        item.unit_weight = unit_weight
-        return unit_weight
+            product.shipment_cost = total_cost
+        # 总的平均成本
+        product.cost = product.shipment_cost + to_float(product.supply_cost)
+        product.save()
 
 
 class ShipmentOrderItemViewSet(NestedViewSetMixin, ModelViewSet):
@@ -258,17 +296,3 @@ class ShipmentBoxViewSet(NestedViewSetMixin, ModelViewSet):
         serializer = self.get_serializer(boxs, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    # def list(self, request, *args, **kwargs):
-    #     order = ShipmentOrder.objects.get(pk=kwargs['parent_lookup_order'])
-    #     boxs = ShipmentBox.objects.filter(order=order).prefetch_related('products')
-    #
-    #     queryset = self.filter_queryset(self.get_queryset())
-    #
-    #     page = self.paginate_queryset(queryset)
-    #     if page is not None:
-    #         serializer = self.get_serializer(page, many=True)
-    #         return self.get_paginated_response(serializer.data)
-    #
-    #     serializer = self.get_serializer(queryset, many=True)
-    #     return Response(serializer.data)

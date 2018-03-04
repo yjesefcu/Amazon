@@ -7,10 +7,23 @@ app.controller('ShipmentCtrl', function ($scope, $http, $rootScope, serviceFacto
             MarketplaceId: $rootScope.MarketplaceId
         }
     }).then(function (result) {
-        $scope.shipments = result.data;
+        sortOrders(result.data);
     }).catch(function (result) {
 
     });
+
+    function sortOrders (orders) {     // 对移库单进行排列，将待办放前面
+        var todos = [], others = [], userRole=$rootScope.userRole;
+        orders.forEach(function (n) {
+           if (n.status.role == userRole) {
+                n.canEdit = true;
+               todos.push(n);
+           }  else {
+               others.push(n);
+           }
+        });
+        $scope.shipments = todos.concat(others);
+    };
 
     $scope.deleteShipment = function(index, id){
         $http.delete(serviceFactory.shipmentDetail(id))
@@ -27,7 +40,7 @@ app.controller('ShipmentCtrl', function ($scope, $http, $rootScope, serviceFacto
     }
 });
 
-app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $stateParams, $state, $timeout, serviceFactory) {
+app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $stateParams, $state, $timeout, $uibModal, serviceFactory) {
     var id = $stateParams.id;
     $scope.createBy = $stateParams.by;
     $scope.formData = {MarketplaceId: $rootScope.MarketplaceId};
@@ -35,10 +48,16 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
     $scope.error_msg = '';
     $scope.volume_args_choice = [5000, 6000];
     $scope.boxs = [];
-    $scope.editDisable = false;
+    $scope.canEdit = false;
     $scope.products = [];
     $scope.searchResults = [];
     $scope.searchResultsPosition = {};
+
+    if ($stateParams.products && $stateParams.products.length) {
+        $stateParams.products.forEach(function (p) {
+           $scope.items.push({SellerSKU: p.SellerSKU, product: p});
+        });
+    }
 
     $scope.addProductRow = function () {
         $scope.items.push({});
@@ -79,18 +98,16 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
         item.product = product;
     };
 
-    $scope.isDetail = id ? true : false;
-    if ($scope.isDetail)
-    {
-        getShipment(id);
-    }
+    getShipment();
 
-    function getShipment(id) {
+    function getShipment() {
         $http.get(serviceFactory.shipmentDetail(id)).then(function (result) {
             $scope.formData = result.data;
             $scope.items = result.data.items;
-            if (result.data.status.id === 102 || $rootScope.userRole !== result.data.status.role) {
-                $scope.editDisable = true;
+            if (result.data.status.id === 100 && $rootScope.userRole === result.data.status.role) {
+                $scope.canEdit = true;
+            } else {
+                $scope.canEdit = false;
             }
         });
         $http.get('/api/shipments/' + id +'/boxs/').then(function (result) {
@@ -190,7 +207,10 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
     $scope.update = function () {   // 更新箱子信息
         var data = $.extend({}, $scope.formData, {'boxs': $scope.boxs});
         $http.patch('/api/shipments/' + id, data).then(function (result) {
+            $rootScope.addAlert('success', '保存成功');
             getShipment(id);
+        }).catch(function (exception) {
+            $rootScope.addAlert('danger', '保存失败:' + exception.data)
         });
     };
 
@@ -222,69 +242,143 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
     };
 
 
-    $scope.calc = function(){       // 计算每个商品的运费和关税
-        var p, totalWeight=0, totalPrice= 0, totalFreight= 0,totalTax=0;
-        for (var i in $scope.products){
-            p = $scope.products[i];
-            if ($scope.createBy == 'sea')
-            {
-                p.volume_weight = p.width * p.height * p.length / $scope.volume_args;
-                p.unit_weight = Math.max(parseFloat(p.volume_weight), parseFloat(p.weight));
-            }else{
-                p.unit_weight = p.width * p.length * p.height / 1000000;
+    $scope.openFeeInputModal = function () {        // 打开创建入库信息的对话框
+        var modalInstance = $uibModal.open({
+            templateUrl : '/static/templates/shipment/fee_input_modal.html',//script标签中定义的id
+            controller : 'FeeInputModalCtrl',//modal对应的Controller
+            resolve : {
+                data : function() {//data作为modal的controller传入的参数
+
+                    return {
+                        order: $scope.formData
+                    };//用于传递数据
+                }
             }
-            totalWeight += p.unit_weight * p.QuantityShipped;
-            totalPrice += p.unit_price * p.QuantityShipped;
-        }
-        // 计算每个商品的运费和关税
-        for (var i in $scope.products){
-            p = $scope.products[i];
-            p.total_freight = p.unit_weight * p.QuantityShipped  / totalWeight * $scope.formData.total_freight;
-            totalFreight += p.total_freight;
-            p.duty = p.unit_price* p.QuantityShipped  / totalPrice * $scope.formData.duty;
-            totalTax += p.duty;
-        }
-        $scope.totalWeight = totalWeight;
-        $scope.totalTax = totalTax;
-        $scope.totalFreight = totalFreight;
+        });
+        modalInstance.result.then(function (result) {
+            getShipment();
+        });
+    };
+});
+
+app.controller('ShipmentCreateCtrl', function ($scope, $http, $rootScope, $stateParams, $state, $timeout, serviceFactory) {
+    $scope.id = $stateParams.id;
+    $scope.formData = {MarketplaceId: $rootScope.MarketplaceId};
+    $scope.items = [];
+    $scope.error_msg = '';
+    $scope.products = [];
+    $scope.searchResults = [];
+    $scope.searchResultsPosition = {};
+
+    if ($stateParams.products && $stateParams.products.length) {
+        $stateParams.products.forEach(function (p) {
+           $scope.items.push({SellerSKU: p.SellerSKU, product: p});
+        });
+    }
+
+    function getProducts () {
+        $http.get("/api/products").then(function (result) {
+            $scope.products = result.data;
+        });
+    }
+
+    $scope.focusSearchInput = function ($event, sku) {
+        var offset = $($event.target).offset();
+        $scope.searchResultsPosition = {x: offset.left+'px', y: (offset.top+24)+'px'};
+        $scope.skuSearch(sku);
     };
 
-    $scope.totalWeight = 0;
-    $scope.totalTax = 0;
-    $scope.totalFreight = 0;
-
-    $scope.calc = function(){
-        var p, totalWeight=0, totalPrice= 0, totalFreight= 0,totalTax=0;
-        for (var i in $scope.items){
-            p = $scope.items[i];
-            if ($scope.createBy == 'sea')
-            {
-                p.volume_weight = p.width * p.height * p.length / $scope.volume_args;
-                p.unit_weight = Math.max(parseFloat(p.volume_weight), parseFloat(p.weight));
-            }else{
-                p.unit_weight = p.width * p.length * p.height / 1000000;
-            }
-            totalWeight += p.unit_weight * p.QuantityShipped;
-            totalPrice += p.unit_price * p.QuantityShipped;
+    $scope.skuSearch = function (sku) {     // 商品搜索
+        if (!sku) {
+            $scope.searchResults = $scope.products;
+            return;
         }
-        // 计算每个商品的运费和关税
-        for (var i in $scope.items){
-            p = $scope.items[i];
-            p.total_freight = p.unit_weight * p.QuantityShipped  / totalWeight * $scope.formData.total_freight;
-            totalFreight += p.total_freight;
-            p.duty = p.unit_price* p.QuantityShipped  / totalPrice * $scope.formData.duty;
-            totalTax += p.duty;
-        }
-        $scope.totalWeight = totalWeight;
-        $scope.totalTax = totalTax;
-        $scope.totalFreight = totalFreight;
+        var results = [];
+        sku = sku.toLowerCase();
+        $scope.products.forEach(function (p) {
+           if (p.SellerSKU.toLowerCase().indexOf(sku) >= 0) {
+               results.push(p);
+           }
+        });
+        $scope.searchResults = results;
     };
 
-    $scope.avgTax = function(){
+    getProducts();
 
+    $scope.chooseProduct = function (item, product) {
 
-        for (var i in $scope.items){
+        item.SellerSKU = product.SellerSKU;
+        item.product = product;
+    };
 
-        }
+    if ($scope.id)
+    {
+        getShipment($scope.id);
+    }
+
+    function getShipment(id) {
+        $http.get(serviceFactory.shipmentDetail(id)).then(function (result) {
+            $scope.formData = result.data;
+            $scope.items = result.data.items;
+        });
+    }
+
+    $scope.addItem = function () {
+        $scope.items.push({});
+    };
+
+    $scope.removeItem = function (index) {
+        $scope.items.splice(index, 1);
+    };
+
+    $scope.save = function () {
+        $scope.error_msg = '';
+        $scope.formData['items'] = $scope.items;
+        $http({
+            url: '/api/shipments/',
+            method: 'post',
+            data: $scope.formData
+        }).then(function (result) {
+            $rootScope.addAlert('success', '保存成功');
+            $state.go('index.shipmentDetail', {id: result.data.id});
+        }).catch(function (result) {
+            console.log('create outbound shipment failed');
+            $rootScope.addAlert('danger', '保存失败');
+            if (result.status == 400){
+                $scope.error_msg = result.data.msg;
+            }
+        });
+    };
+
+    $scope.delete = function () {       // 删除移库单
+        $http.delete('/api/shipments/' + $scope.id).then(function (result) {
+            // 跳回到列表页
+            $rootScope.addAlert('success', '删除成功');
+            $state.go('index.shipment');
+        }).catch(function (exception) {
+            $rootScope.addAlert('danger', '删除失败：' + exception.message);
+        })
+    };
+
+});
+
+app.controller('FeeInputModalCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
+    $scope.order = data.order;
+    $scope.error = '';
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
+    };
+
+    $scope.submit = function () {       // 提交关闭采购单
+        $http.post('/api/shipments/' + $scope.order.id + '/payed/', {
+            traffic_fee: $scope.traffic_fee,
+            tax_fee: $scope.tax_fee
+        }).then(function (result) {
+            $rootScope.addAlert('success', '提交成功');
+            $uibModalInstance.close();
+        }).catch(function (exception) {
+           $rootScope.addAlert("danger", '提交失败:' + exception.data);
+        });
     }
 });

@@ -13,6 +13,14 @@ class DateTimeFormat(serializers.DateTimeField):
         return value.strftime('%Y-%m-%d %H:%M')
 
 
+class FloatRoundField(serializers.FloatField):
+
+    def to_representation(self, value):
+        if not value:
+            return value
+        return round(float(value), 2)
+
+
 class RoleNameSerializer(serializers.CharField):
 
     def to_representation(self, value):
@@ -75,6 +83,7 @@ class PurchasingOrderSerializer(serializers.ModelSerializer):
 
 class PurchasingOrderItemSeriazlier(serializers.ModelSerializer):
     product = ProductSerializer()
+    traffic_fee = FloatRoundField()
 
     class Meta:
         model = PurchasingOrderItems

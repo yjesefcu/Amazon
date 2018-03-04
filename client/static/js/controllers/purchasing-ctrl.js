@@ -84,31 +84,22 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
     };
 
     $scope.delete = function (forward) {
-        $.ajax({
-            url: '/api/purchasing/'+$scope.id+'/',
-            method: 'delete',
-            async: false,
-            success: function () {
-                // 跳回到列表页
-                if (forward)
-                {
-                    $rootScope.addAlert('success', '删除成功');
-                    $state.go('index.purchasing');
-                }
-            },
-            error: function (xhr) {
-                if (forward)
-                {
-                    $rootScope.addAlert('danger', '删除失败');
-                }
+        $http.delete('/api/purchasing/'+$scope.id+'/').then(function (result) {
+            // 跳回到列表页
+            if (forward)
+            {
+                $rootScope.addAlert('success', '删除成功');
+                $state.go('index.purchasing');
+            }
+        }).catch(function (exception) {
+            if (forward)
+            {
+                $rootScope.addAlert('danger', '删除失败:' + exception.data);
             }
         });
     };
 
     $scope.save = function () {
-        if ($scope.id) {       // 如果是编辑的话，先删除原来的订单，再新建
-            $scope.delete(false);
-        }
         var items = [];
         $scope.order.items.forEach(function (n) {
            if (n.SellerSKU && n.count) {
@@ -170,6 +161,8 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
             if ($rootScope.userRole === 'purchasing_agent' && (status_id > 3 && status_id != 8))  // 只有财务才能添加物流
             {
                 $scope.canCreate = true;
+            } else {
+                $scope.canCreate = false;
             }
         }).catch(function (error) {
             $rootScope.addAlert('error', '获取订单信息失败');
@@ -202,7 +195,7 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
             $rootScope.addAlert('success', '提交成功');
             init();
         }).catch(function (exception) {
-            $rootScope.addAlert('error', '提交失败');
+            $rootScope.addAlert('error', '提交失败:' + exception.data);
         });
     };
 
@@ -227,7 +220,7 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
         var modalInstance = $uibModal.open({
             size: 'lg',
             templateUrl : '/static/templates/purchasing/create_inbound.html',//script标签中定义的id
-            controller : 'PurchasingAddInboundCtrl',//modal对应的Controller
+            controller : 'PurchasingAddInboundModalCtrl',//modal对应的Controller
             resolve : {
                 data : function() {//data作为modal的controller传入的参数
                     var items = [];
@@ -248,6 +241,23 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
             getInbounds();
         });
     };
+
+    $scope.closeOrder = function () {   // 关闭采购单
+        var modalInstance = $uibModal.open({
+            templateUrl : '/static/templates/purchasing/order_close_confirm.html',//script标签中定义的id
+            controller : 'PurchasingOrderCloseConfirmModalCtrl',//modal对应的Controller
+            resolve : {
+                data : function() {//data作为modal的controller传入的参数
+                    return {
+                        order: $scope.order
+                    };//用于传递数据
+                }
+            }
+        });
+        modalInstance.result.then(function (result) {
+            $scope.refresh();
+        });
+    }
 });
 
 
@@ -296,7 +306,7 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
         var modalInstance = $uibModal.open({
             size: 'lg',
             templateUrl : '/static/templates/purchasing/inbound_input.html',//script标签中定义的id
-            controller : 'PurchasingInputCtrl',//modal对应的Controller
+            controller : 'PurchasingInputModalCtrl',//modal对应的Controller
             resolve : {
                 data : function() {     //data作为modal的controller传入的参数
 
@@ -314,7 +324,7 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
     $scope.openPayModal = function (trafficOrder) {        // 物流费打款对话框
         var modalInstance = $uibModal.open({
             templateUrl : '/static/templates/purchasing/traffic_fee_confirm.html',//script标签中定义的id
-            controller : 'InboundTrafficFeeConfirmCtrl',//modal对应的Controller
+            controller : 'InboundTrafficFeeConfirmModalCtrl',//modal对应的Controller
             resolve : {
                 data : function() {//data作为modal的controller传入的参数
                     return {
@@ -329,7 +339,7 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
     };
 });
 
-app.controller('PurchasingAddInboundCtrl', function ($scope, $http, $rootScope, $state, data, $uibModalInstance) {
+app.controller('PurchasingAddInboundModalCtrl', function ($scope, $http, $rootScope, $state, data, $uibModalInstance) {
     var inboundId=data.id, purchasingId = data.purchasingId;
     $scope.items = data.items;
     $scope.order = {};
@@ -375,7 +385,7 @@ app.controller('PurchasingAddInboundCtrl', function ($scope, $http, $rootScope, 
 });
 
 // 物流入库对话框
-app.controller('PurchasingInputCtrl', function ($scope, $http, $rootScope, $state, data, $uibModalInstance) {
+app.controller('PurchasingInputModalCtrl', function ($scope, $http, $rootScope, $state, data, $uibModalInstance) {
     $scope.order = data.order;
     $scope.error = '';
 
@@ -423,7 +433,7 @@ app.controller('PurchasingInputCtrl', function ($scope, $http, $rootScope, $stat
     };
 });
 
-app.controller('InboundTrafficFeeConfirmCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
+app.controller('InboundTrafficFeeConfirmModalCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
     $scope.order = data.order;
 
     $scope.submit = function () {
@@ -441,4 +451,26 @@ app.controller('InboundTrafficFeeConfirmCtrl', function ($scope, $http, $uibModa
     $scope.cancel = function() {
         $uibModalInstance.close();
     };
+});
+
+app.controller('PurchasingOrderCloseConfirmModalCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
+    $scope.order = data.order;
+    $scope.error = '';
+
+    if ($scope.order.count !== $scope.order.received_count) {
+        $scope.error = '已到货数量与采购数量不符，确认要关闭吗？'
+    }
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
+    };
+
+    $scope.submit = function () {       // 提交关闭采购单
+        $http.patch('/api/purchasing/' + $scope.order.id + '/', {status_id: 8}).then(function (result) {
+            $rootScope.addAlert('success', '关闭成功');
+            $uibModalInstance.close();
+        }).catch(function (exception) {
+           $rootScope.addAlert("danger", '关闭失败:' + exception.data);
+        });
+    }
 });
