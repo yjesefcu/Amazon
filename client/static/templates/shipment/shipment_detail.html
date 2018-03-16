@@ -100,8 +100,9 @@
         <div class="col-sm-12">
             <a class="btn btn-primary" title="编辑" ng-if="userRole === 'operator' && formData.status.code==='WaitForPack'"
                ui-sref="index.createShipment({id: formData.id})"><i class="fa fa-pencil"></i> 编辑</a>
-            <a class="btn btn-primary" ng-click="openFeeInputModal()"
-                    ng-if="userRole === formData.status.role && formData.status.code === 'WaitForSettle'">输入运费和关税</a>
+        </div>
+        <div class="col-sm-12" ng-if="userRole === formData.status.role && formData.status.code === 'WaitForSettle'">
+            <a class="btn btn-primary" ng-click="openFeeInputModal()">输入运费和关税</a>
         </div>
     </div>
     <div class="row">
@@ -208,7 +209,8 @@
     </div>
     <div class="row" ng-if="userRole === formData.status.role && formData.status.code === 'WaitForPack'">
         <div class="col col-md-12">
-            <button ng-click="update()" class="btn btn-primary">保存</button>
+            <button ng-click="update()" class="btn btn-primary" ng-if="!isSubmitting">保存</button>
+            <button class="btn btn-primary " disabled ng-if="isSubmitting">正在提交...</button>
         </div>
     </div>
 </section>

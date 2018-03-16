@@ -22,5 +22,6 @@
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-default pull-left" ng-click="cancel()">取消</button>
-    <button type="button" class="btn btn-primary" ng-click="submit()">保存</button>
+    <button type="button" class="btn btn-primary" ng-click="submit()" ng-if="!isSubmitting">保存</button>
+    <button type="button" class="btn btn-primary" ng-if="isSubmitting">正在保存...</button>
 </div>

@@ -52,6 +52,7 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
     $scope.products = [];
     $scope.searchResults = [];
     $scope.searchResultsPosition = {};
+    $scope.isSubmitting = false;
 
     if ($stateParams.products && $stateParams.products.length) {
         $stateParams.products.forEach(function (p) {
@@ -126,15 +127,18 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
             url = serviceFactory.outboundShipments();
         }
         $scope.formData['items'] = $scope.items;
+        $scope.isSubmitting = true;
         $http({
             url: url,
             method: method,
             data: $scope.formData
         }).then(function (result) {
             console.log('create outbound shipment success');
+            $scope.isSubmitting = false;
             $state.go('index.shipmentDetail', {id: result.data.id});
         }).catch(function (result) {
             console.log('create outbound shipment failed');
+            $scope.isSubmitting = false;
             $rootScope.addAlert('danger', '保存失败');
             if (result.status == 400){
                 $scope.error_msg = result.data.msg;
@@ -147,12 +151,15 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
     };
 
     $scope.saveItem = function (index, id) {    // 保存修改
+        $scope.isSubmitting = true;
         $http.patch(serviceFactory.shipmentItemDetail(id), {unit_cost:$scope.items[index].unit_cost})
             .then(function (result) {
+                $scope.isSubmitting = false;
                 $rootScope.addAlert('info', '修改成功');
                 $scope.items[index] = result.data;
                 $scope.items[index].isEdit = false;
             }).catch(function (result) {
+                $scope.isSubmitting = false;
                 $rootScope.addAlert('error', '修改失败');
             });
     };
@@ -248,7 +255,6 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
             controller : 'FeeInputModalCtrl',//modal对应的Controller
             resolve : {
                 data : function() {//data作为modal的controller传入的参数
-
                     return {
                         order: $scope.formData
                     };//用于传递数据
@@ -365,19 +371,23 @@ app.controller('ShipmentCreateCtrl', function ($scope, $http, $rootScope, $state
 app.controller('FeeInputModalCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
     $scope.order = data.order;
     $scope.error = '';
+    $scope.isSubmitting = false;
 
     $scope.cancel = function() {
         $uibModalInstance.close();
     };
 
     $scope.submit = function () {       // 提交关闭采购单
+        $scope.isSubmitting = true;
         $http.post('/api/shipments/' + $scope.order.id + '/payed/', {
             traffic_fee: $scope.traffic_fee,
             tax_fee: $scope.tax_fee
         }).then(function (result) {
+            $scope.isSubmitting = false;
             $rootScope.addAlert('success', '提交成功');
             $uibModalInstance.close();
         }).catch(function (exception) {
+            $scope.isSubmitting = false;
            $rootScope.addAlert("danger", '提交失败:' + exception.data);
         });
     }

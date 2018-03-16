@@ -65,3 +65,28 @@ app.config(function($sceDelegateProvider) {
 });
 
 // $.fn.dataTables.ext.errMode = 'none'; //不显示任何错误信息
+
+app.directive("submitButton", function () {
+    return {
+     　　template: '<div></div>',
+     　　templateUrl: 'directive.html',
+     　　restrict: 'E',
+     　　scope: false,
+     　　compile: function compile(tElement, tAttrs, transclude) {
+
+     　　　　return {
+     　　　　　　pre: function preLink(scope, iElement, iAttrs, controller) {
+
+               },
+
+         　　　　　　post: function postLink(scope, iElement, iAttrs, controller) {
+
+               }
+    　　　　}
+    　　 },
+     　　link: function postLink(scope, iElement, iAttrs) {
+
+       }
+
+    };
+});

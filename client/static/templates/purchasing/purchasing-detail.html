@@ -147,8 +147,54 @@
             <!-- /.box -->
         </div>
     </div>
-    <div ng-include="'/static/templates/purchasing/inbounds-list.html'"></div>
-    <div class="box box-primary">
+
+    <div class="row" ng-if="order.items.length" ng-controller="PurchasingInboundsCtrl">
+        <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">物流历史
+                    </h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>物流单号</th>
+                            <th>物流公司</th>
+                            <th>发货日期</th>
+                            <th>总发货数量</th>
+                            <th>实际到货数量</th>
+                            <th>损坏数量</th>
+                            <th>状态</th>
+                            <th>当前处理人</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="p in inbounds" table-repeat-directive>
+                            <td>{{ p.tracking_number}}</td>
+                            <td>{{p.tracking_company}}</td>
+                            <td>{{ p.shipping_date}}</td>
+                            <td>{{ p.expect_count}}</td>
+                            <td>{{ p.received_count }}</td>
+                            <td>{{p.damage_count}}</td>
+                            <td>{{ p.status.name }}</td>
+                            <td>{{ p.status.role_name }}</td>
+                            <td>
+                                <a href="javascript:void(0)" ng-click="openInputModal(p)" ng-if="p.status.code==='WaitForInbound' && userRole===p.status.role">入库</a>
+                                <a href="javascript:void(0)" ng-click="openPayModal(p)" ng-if="userRole===p.status.role && p.status.code === 'WaitForTrafficFeePayed'">打款</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>    <div class="box box-primary">
         <div class="box-body">
             <div class="box-header with-border">
               <h3 class="box-title">打款记录</h3>
