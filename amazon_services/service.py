@@ -6,7 +6,7 @@ import datetime
 from Queue import Queue
 from xml_parser import *
 from text_parser import *
-from models import RequestRecords, ReportRequestRecord
+from models import ReportRequestRecord
 from exception import *
 from file_utils import save_file, get_file_content
 from exception import FileNotExist

@@ -17,6 +17,12 @@
                     <input type="text" class="form-control" placeholder="物流单号" ng-model="order.tracking_number" required>
                 </div>
             </div>
+            <div class="col-sm-6">
+                <h4>尾款(元)：</h4>
+                <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
+                    <input type="text" class="form-control" placeholder="没有尾款可不填" ng-model="order.final_payment" required>
+                </div>
+            </div>
         </div>
         <h3>商品列表</h3>
         <span>注：未发货的商品，无需填发货数量</span>

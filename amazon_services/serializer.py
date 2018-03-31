@@ -8,4 +8,4 @@ class MarketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MarketAccount
-        fields = ['country', 'currency', 'MarketplaceId']
+        fields = '__all__'

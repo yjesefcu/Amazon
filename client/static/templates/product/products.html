@@ -27,6 +27,7 @@
                                 <th>图片</th>
                                 <th>描述</th>
                                 <th>国内库存</th>
+                                <th>国内成本<br>({{ currency }})</th>
                                 <th>亚马逊库存</th>
                                 <!--<th>操作</th>-->
                             </tr>
@@ -40,6 +41,7 @@
                                 <td><img src="{{ host }}{{ p.Image }}"></td>
                                 <td style="max-width: 100px;">{{ p.TitleCn }}</td>
                                 <td>{{ p.domestic_inventory }}</td>
+                                <td>{{ p.supply_cost }}</td>
                                 <td>{{ p.amazon_inventory }}</td>
                                 <!--<td>-->
                                     <!--<a title="添加入库货件（至上海）" ng-click="openSupplyModal(p.id);"><i class="fa fa-plus"></i></a>-->

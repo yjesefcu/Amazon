@@ -13,13 +13,14 @@ class Market(models.Model):
 
 
 class MarketAccount(models.Model):
+    MarketplaceId = models.CharField(max_length=20, primary_key=True)
     country = models.CharField(max_length=10)   # 国家
+    account_name = models.CharField(max_length=50, null=True, blank=True)   # 账户中文名称
     host = models.CharField(max_length=50)
     MWSAuthToken = models.CharField(max_length=15)
     AWSAccessKeyId = models.CharField(max_length=25)
     SellerId = models.CharField(max_length=20)
     SecretKey = models.CharField(max_length=50)
-    MarketplaceId = models.CharField(max_length=20)
     currency_code = models.CharField(max_length=10)     # 货币编码
     exchange_rate = models.FloatField(default=6.0)      # 汇率
     period_start = models.DateField(null=True, blank=True)  # 结算周期起点
@@ -52,23 +53,23 @@ class ApiActions(models.Model):
     last_request = models.DateTimeField(null=True, blank=True)           # 上一次请求的时间
 
 
-class RequestRecords(models.Model):
-    """
-    请求记录
-    """
-    SUCCESS = 0
-    FAIL = 1   # 请求超过次数
-    PARSER_FAIL = 2     # 应答无法解析
-    # sender = models.ForeignKey(User)        # 请求发起人
-    market = models.ForeignKey(MarketAccount)
-    # action = models.ForeignKey(ApiActions, related_name='records')
-    uri = models.CharField(max_length=100)      # 请求的链接，即：action.uri
-    action = models.CharField(max_length=50, null=True, blank=True)    # 动作，action.name
-    params = models.TextField(null=True, blank=True)    # 参数，json格式
-    create_time = models.DateTimeField()        # 请求创建的时间
-    sent_time = models.DateTimeField(null=True, blank=True)   # 请求实际发送的时间
-    result = models.IntegerField(default=0)     # 请求结果，0：成功，1：失败
-    errors = models.TextField(null=True, blank=True)    # 失败信息
+# class RequestRecords(models.Model):
+#     """
+#     请求记录
+#     """
+#     SUCCESS = 0
+#     FAIL = 1   # 请求超过次数
+#     PARSER_FAIL = 2     # 应答无法解析
+#     # sender = models.ForeignKey(User)        # 请求发起人
+#     market = models.ForeignKey(MarketAccount)
+#     # action = models.ForeignKey(ApiActions, related_name='records')
+#     uri = models.CharField(max_length=100)      # 请求的链接，即：action.uri
+#     action = models.CharField(max_length=50, null=True, blank=True)    # 动作，action.name
+#     params = models.TextField(null=True, blank=True)    # 参数，json格式
+#     create_time = models.DateTimeField()        # 请求创建的时间
+#     sent_time = models.DateTimeField(null=True, blank=True)   # 请求实际发送的时间
+#     result = models.IntegerField(default=0)     # 请求结果，0：成功，1：失败
+#     errors = models.TextField(null=True, blank=True)    # 失败信息
 
 
 class ReportRequestRecord(models.Model):

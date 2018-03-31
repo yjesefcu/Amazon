@@ -288,6 +288,15 @@ app.controller('ShipmentCreateCtrl', function ($scope, $http, $rootScope, $state
         });
     }
 
+    function getMarkets() {
+        $http.get('/api/markets').then(function (response) {
+            $scope.markets = response.data;
+        }).catch(function (exception) {
+            $rootScope.addAlert('danger', '获取账户信息失败：' + exception.message);
+        });
+    }
+    getMarkets();
+
     $scope.focusSearchInput = function ($event, sku) {
         var offset = $($event.target).offset();
         $scope.searchResultsPosition = {x: offset.left+'px', y: (offset.top+24)+'px'};
@@ -339,7 +348,16 @@ app.controller('ShipmentCreateCtrl', function ($scope, $http, $rootScope, $state
 
     $scope.save = function () {
         $scope.error_msg = '';
-        $scope.formData['items'] = $scope.items;
+        var items = [];
+        $scope.items.forEach(function (n) {
+            if (n.SellerSKU && n.count) {
+                items.push(n);
+            }
+        });
+        if (!items.length) {
+            return;
+        }
+        $scope.formData['items'] = items;
         $http({
             url: '/api/shipments/',
             method: 'post',

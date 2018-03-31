@@ -11,18 +11,23 @@
 <div class="modal-body">
     <form class="form-horizontal" id="inboundForm">
         <div class="box-body">
-            <div class="col-sm-6">
+            <div class="row">
+            <div class="col-sm-4">
                 <h4>物流公司：{{ order.tracking_company }}</h4>
             </div>
-            <div class="col-sm-6">
+            <div class="col-sm-4">
                 <h4>物流单号：{{ order.tracking_number }}</h4>
+            </div>
+            <div class="col-sm-4">
+                <h4>尾款（元）：{{ order.final_payment }}</h4>
             </div>
             <div class="col-sm-6">
                 <h4>运费（元）：</h4>
                 <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
-                    <input type="text" class="form-control" placeholder="请输入运费" ng-model="order.traffic_fee" required>
+                    <input type="text" class="form-control" placeholder="请输入运费，无运费请填0" ng-model="order.traffic_fee" required>
                 </div>
             </div>
+                </div>
         </div>
         <hr>
         <h3>商品列表</h3>

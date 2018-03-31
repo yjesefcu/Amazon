@@ -157,8 +157,8 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
         $http.get('/api/purchasing/' + $scope.orderId + '/').then(function (result) {
             $scope.order = result.data;
             $scope.product = result.data.product;
-            var status_id = $scope.order.status.id;
-            if ($rootScope.userRole === 'purchasing_agent' && (status_id > 3 && status_id != 8))  // 只有财务才能添加物流
+            var code = $scope.order.status.code;
+            if ($rootScope.userRole === 'purchasing_agent' && (code==='WaitForTraffic' || code==='WaitForCheck'))  // 只有采购才能添加物流
             {
                 $scope.canCreate = true;
             } else {
@@ -244,8 +244,8 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
 
     $scope.closeOrder = function () {   // 关闭采购单
         var modalInstance = $uibModal.open({
-            templateUrl : '/static/templates/purchasing/order_close_confirm.html',//script标签中定义的id
-            controller : 'PurchasingOrderCloseConfirmModalCtrl',//modal对应的Controller
+            templateUrl : '/static/templates/purchasing/order_submit_to_pay.html',//script标签中定义的id
+            controller : 'PurchasingOrderSubmitToPayModalCtrl',//modal对应的Controller
             resolve : {
                 data : function() {//data作为modal的controller传入的参数
                     return {
@@ -267,8 +267,9 @@ app.controller('PurchasingOrderPaymentCtrl', function ($scope, $http, $uibModalI
 
     $scope.save = function () {
         $http.post('/api/purchasing/' + $scope.order.id + '/payed/', {
-            payed: $scope.fee,
-            payment_comment: $scope.payment_comment
+            deposit_payed: $scope.deposit_payed,
+            final_payment_payed: $scope.final_payment_payed,
+            traffic_fee_payed: $scope.traffic_fee_payed
         }).then(function (result) {
             $rootScope.addAlert('info', '提交成功');
             $uibModalInstance.close();
@@ -337,6 +338,23 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
             $scope.refresh();
         });
     };
+
+    $scope.openConfirmModal = function (trafficOrder) {     // 确认到货对话框
+        var modalInstance = $uibModal.open({
+            templateUrl : '/static/templates/purchasing/traffic_confirm_modal.html',//script标签中定义的id
+            controller : 'InboundReceiveConfirmCtrl',//modal对应的Controller
+            resolve : {
+                data : function() {//data作为modal的controller传入的参数
+                    return {
+                        order: trafficOrder
+                    };//用于传递数据
+                }
+            }
+        });
+        modalInstance.result.then(function (result) {
+            getInbounds();
+        });
+    }
 });
 
 app.controller('PurchasingAddInboundModalCtrl', function ($scope, $http, $rootScope, $state, data, $uibModalInstance) {
@@ -403,11 +421,16 @@ app.controller('PurchasingInputModalCtrl', function ($scope, $http, $rootScope, 
 
 
     function checkFormValid() {     // 检查数据有效性
+        if (!$scope.order.traffic_fee) {
+            $scope.error = '无法提交：运费不能为空';
+            return false;
+        }
         var valid = true;
         $scope.order.items.forEach(function (n) {
            var p = n.product;
            if (!p.height || !p.weight || !p.length || !p.weight || !p.package_height || !p.package_width
                || !p.package_length || !p.package_weight || !n.received_count) {
+                $scope.error = '无法提交：请确认商品尺寸、到货数量等信息填写完整';
                valid = false;
            }
         });
@@ -416,7 +439,6 @@ app.controller('PurchasingInputModalCtrl', function ($scope, $http, $rootScope, 
 
     $scope.save = function () {
         if (!checkFormValid()) {
-            $scope.error = '无法提交：请确认商品尺寸、到货数量等信息填写完整';
             return;
         }
         $http.post('/api/inbounds/' + $scope.order.id + '/putin/', $scope.order).then(function (result) {
@@ -453,12 +475,12 @@ app.controller('InboundTrafficFeeConfirmModalCtrl', function ($scope, $http, $ui
     };
 });
 
-app.controller('PurchasingOrderCloseConfirmModalCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
+app.controller('PurchasingOrderSubmitToPayModalCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
     $scope.order = data.order;
     $scope.error = '';
 
     if ($scope.order.count !== $scope.order.received_count) {
-        $scope.error = '已到货数量与采购数量不符，确认要关闭吗？'
+        $scope.error = '已到货数量与采购数量不符，确认要提交财务吗？'
     }
 
     $scope.cancel = function() {
@@ -466,8 +488,27 @@ app.controller('PurchasingOrderCloseConfirmModalCtrl', function ($scope, $http, 
     };
 
     $scope.submit = function () {       // 提交关闭采购单
-        $http.patch('/api/purchasing/' + $scope.order.id + '/', {status_id: 8}).then(function (result) {
-            $rootScope.addAlert('success', '关闭成功');
+        $http.patch('/api/purchasing/' + $scope.order.id + '/', {status_id: 9}).then(function (result) {
+            // $rootScope.addAlert('success', '关闭成功');
+            $uibModalInstance.close();
+        }).catch(function (exception) {
+           $rootScope.addAlert("danger", '提交失败:' + exception.data);
+        });
+    }
+});
+
+
+app.controller('InboundReceiveConfirmCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
+    $scope.order = data.order;
+    $scope.error = '';
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
+    };
+
+    $scope.submit = function () {       // 提交关闭采购单
+        $http.post('/api/inbounds/' + $scope.order.id + '/received/').then(function (result) {
+            // $rootScope.addAlert('success', '关闭成功');
             $uibModalInstance.close();
         }).catch(function (exception) {
            $rootScope.addAlert("danger", '关闭失败:' + exception.data);

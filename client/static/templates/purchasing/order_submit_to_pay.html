@@ -1,15 +1,17 @@
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
-    <h4 class="modal-title">关闭确认</h4>
+    <h4 class="modal-title">提交确认</h4>
 </div>
   <div class="modal-body">
       <div class="row">
+          <h3 style="padding-left:12px;">采购单将提交财务处理</h3>
         <div class="col-sm-12" style="font-size: 18px;">采购数量：<strong class="text-aqua">{{ order.count }}</strong></div>
         <div class="col-sm-12" style="font-size: 18px;">已到货数量：<strong class="text-aqua">{{ order.received_count }}</strong></div>
+        <div class="col-sm-12" style="font-size: 18px;">损坏数量：<strong class="text-aqua">{{ order.damage_count }}</strong></div>
           <div class="col-sm-12 text-red" ng-if="error" style="margin-top:10px;font-size:20px;">{{ error }}</div>
       </div>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-default pull-left" ng-click="cancel()">取消</button>
-    <button type="button" class="btn btn-primary" ng-click="submit()">确定关闭</button>
+    <button type="button" class="btn btn-primary" ng-click="submit()">提交</button>
   </div>

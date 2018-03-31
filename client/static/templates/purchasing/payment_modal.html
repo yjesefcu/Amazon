@@ -6,18 +6,21 @@
     <form class="form-horizontal">
         <div class="box-body">
             <div class="col-sm-12">
-                <h4>需要支付：<strong style="font-size: 20px;color: red;">{{ order.next_to_pay }}元</strong></h4>
-            </div>
-            <div class="col-sm-12">
-                <h4>实际支付：</h4>
+                <h4>预付款：需支付<span class="text-aqua">{{ order.deposit }}元</span></h4>
                 <div class="col-sm-6 col-xs-6 col-md-6 input-horizontal">
-                    <input type="text" class="form-control" placeholder="请输入实际支付的费用" ng-model="fee" required>
+                    <input type="text" class="form-control" placeholder="请输入实际支付的预付款" ng-model="deposit_payed" required>
                 </div>
             </div>
             <div class="col-sm-12">
-                <h4>备注：</h4>
+                <h4>尾款：需支付<span class="text-aqua">{{ order.final_payment }}元</span></h4>
                 <div class="col-sm-6 col-xs-6 col-md-6 input-horizontal">
-                    <input type="text" class="form-control" placeholder="支付说明，可不填" ng-model="payment_comment">
+                    <input type="text" class="form-control" placeholder="请输入实际支付的尾款" ng-model="final_payment_payed" required>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <h4>运费：需支付<span class="text-aqua">{{ order.traffic_fee }}元</span></h4>
+                <div class="col-sm-6 col-xs-6 col-md-6 input-horizontal">
+                    <input type="text" class="form-control" placeholder="请输入实际支付的运用" ng-model="traffic_fee_payed" required>
                 </div>
             </div>
         </div>
@@ -25,5 +28,5 @@
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-default pull-left" ng-click="cancel()">取消</button>
-    <button type="button" class="btn btn-primary" ng-click="save()">保存</button>
+    <button type="button" class="btn btn-primary" ng-click="submit()">保存</button>
 </div>

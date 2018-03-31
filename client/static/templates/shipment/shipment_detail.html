@@ -12,6 +12,9 @@
         <div class="box-body">
             <div class="row">
                 <div class="form-group col-sm-3 col-xs-6">
+                    <span >目的账号：</span><span>{{formData.market.account_name}}</span>
+                </div>
+                <div class="form-group col-sm-3 col-xs-6">
                     <span >货件ID：</span><span>{{formData.code}}</span>
                 </div>
                 <div class="form-group col-sm-3 col-xs-6">
@@ -60,6 +63,10 @@
                 <form role="form">
                     <div class="box-body">
                         <div class="row">
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >目的账号</label>
+                                <input type="text" class="form-control" ng-model="formData.market.account_name" disabled>
+                            </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >货件Id</label>
                                 <input type="text" class="form-control" placeholder="亚马逊货件Id" ng-model="formData.code" ng-if="canEdit">

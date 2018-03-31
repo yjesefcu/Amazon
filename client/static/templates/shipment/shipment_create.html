@@ -9,6 +9,25 @@
         <div class="col-sm-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
+                    <h3 class="box-title">订单基本信息
+                    </h3>
+                </div>
+                <div class="box-body">
+                    <div class="col-sm-6">
+                        <h4>目的账号：</h4>
+                            <select class="form-control" ng-model="formData.MarketplaceId" ng-options="m.MarketplaceId as m.account_name for m in markets">
+                              </select>
+                    </div>
+                    <div class="col-sm-6">
+                        <h4>物流公司：</h4>
+                        <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
+                            <input type="text" class="form-control" placeholder="物流公司名称" ng-model="formData.company" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box box-primary">
+                <div class="box-header with-border">
                     <h3 class="box-title">本次发货的商品信息
                         <button class="btn btn-primary" ng-click="addItem();">添加商品</button>
                     </h3>
@@ -56,7 +75,7 @@
             </div>
         </div>
     </div>
-    <button class="btn btn-primary" ng-click="save();" ng-if="!id">保存</button>
+    <button class="btn btn-primary" ng-click="save();" ng-if="!id" style="margin-left: 16px;">保存</button>
     <div class="row" ng-if="userRole==='operator' && formData.status.code==='WaitForPack' && id">
         <div class="col col-md-12">
             <button ng-click="delete()" class="btn btn-danger"><i class="fa fa-trash-o"></i>删除</button>
