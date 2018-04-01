@@ -9,6 +9,43 @@
         <div class="col-sm-12" style="font-size: 18px;">已到货数量：<strong class="text-aqua">{{ order.received_count }}</strong></div>
         <div class="col-sm-12" style="font-size: 18px;">损坏数量：<strong class="text-aqua">{{ order.damage_count }}</strong></div>
           <div class="col-sm-12 text-red" ng-if="error" style="margin-top:10px;font-size:20px;">{{ error }}</div>
+          <table>
+            <table class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th>商品SKU</th>
+                    <th>图片</th>
+                    <th>描述</th>
+                    <th>采购数量</th>
+                    <th>单价(元)</th>
+                    <th>总花费(元)</th>
+                    <th>已入库数量</th>
+                    <th>损坏数量</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="p in order.items">
+                    <td><a ui-sref="index.productDetail({productId: p.id})">{{ p.SellerSKU }}</a></td>
+                    <td><img ng-src="{{ p.product.Image }}"></td>
+                    <td>{{p.product.TitleCn}}</td>
+                    <td>{{ p.count}}</td>
+                    <td>{{ p.price }}</td>
+                    <td>
+                        <span ng-if="!p.isEdit">{{ p.total_fee }}</span>
+                        <input type="text" ng-if="p.isEdit" ng-model="p.newTotalFee">
+                    </td>
+                    <td>{{p.received_count}}</td>
+                    <td>{{p.damage_count}}</td>
+                    <td>
+                        <button class="btn btn-default" title="修改订单中该商品的实际花费" ng-if="!p.isEdit" ng-click="changeTotalFee(p)">花费校准</button>
+                        <button class="btn btn-primary" ng-if="p.isEdit" ng-click="saveTotalFeeChange(p)">确定</button>
+                        <button class="btn btn-default" ng-click="p.isEdit=false" ng-if="p.isEdit">取消</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+          </table>
       </div>
   </div>
   <div class="modal-footer">

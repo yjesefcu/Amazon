@@ -14,8 +14,9 @@ class OrderStatus(models.Model):
     WaitForInbound = 6          # 等待仓库入库
     TrafficReceived = 7         # 入库
     WaitForCheck = 8            # 等待采购确认
-    WaitForPayment = 9  # 等待物流费打款
+    WaitForPayment = 9          # 等待财务确认
     FINISH = 10                # 完成
+    PurchasingPaymentRefresh = 11   # 等待采购员再次确认采购单应付金额
     WaitForPack = 100           # 移库：等待打包
     WaitForSettle = 101         # 移库：等待结账
     ShipmentFinish = 102        # 移库：已关闭
@@ -83,7 +84,6 @@ class PurchasingOrderItems(models.Model):
     total_fee = models.FloatField(null=True, blank=True)    # 总费用
     traffic_fee = models.FloatField(null=True, blank=True)  # 物流费
     other_fee = models.FloatField(null=True, blank=True)    # 杂费
-    unit_price = models.FloatField(null=True, blank=True)   # 最终单价=（数量*单价+物流费+杂费）/数量
 
 
 class OrderFee(models.Model):
@@ -113,6 +113,9 @@ class TrackingOrder(models.Model):
 class TrackingOrderItems(models.Model):
     purchasing_order = models.ForeignKey(PurchasingOrder)
     traffic_order = models.ForeignKey(TrackingOrder, related_name='items')
+    price = models.FloatField(null=True, blank=True)        # 本次物流时商品单价
+    traffic_fee = models.FloatField(null=True, blank=True)
+    total_price = models.FloatField(null=True, blank=True)  # 总价
     shipping_date = models.DateField(null=True, blank=True)      # 发货时间
     input_date = models.DateField(null=True, blank=True)   # 到货日期
     product = models.ForeignKey(Product)

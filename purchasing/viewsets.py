@@ -107,9 +107,29 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        data = request.data
+        try:
+            with transaction.atomic():
+
+                if data.get('status_id') == OrderStatus.WaitForPayment:
+                    # 提交到财务确认时，需要确认采购单花费是否争正确
+                    post_items = data.get('items')
+                    db_items = instance.items.all()
+                    total_fee = 0
+                    for post_item in post_items:
+                        item_fee = to_float(post_item.get('total_fee'))
+                        total_fee += to_float(item_fee)
+                        for db_item in db_items:
+                            if db_item.id == post_item.get("id"):
+                                if db_item.total_fee != item_fee:
+                                    self._update_prodcut_total_fee(db_item, item_fee)
+                    del data['items']
+                    data['total_payed'] = total_fee
+                serializer = self.get_serializer(instance, data=data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
@@ -117,6 +137,18 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+
+    def _update_prodcut_total_fee(self, item, new_total_fee):
+        # 如果订单中商品的实际花费与之前的不吻合，需要更新商品成本
+        old_total_fee = item.total_fee
+        item.total_fee = new_total_fee
+        item.save()
+        diff = new_total_fee - old_total_fee
+        # 更新商品成本
+        product = item.product
+        product.supply_cost += diff / product.domestic_inventory if product.domestic_inventory else 0
+        product.save()
+
 
     @detail_route(methods=['post'])
     def payed(self, request, pk, **kwargs):
@@ -152,8 +184,10 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 count = 0
                 for item in items:
                     product = Product.objects.get(pk=item['product']['id'])
+                    price = to_float(item.get('price'))
                     titem = TrackingOrderItems.objects.create(purchasing_order=purchasing_order, traffic_order=inbound, shipping_date=today,
-                                                      product=product, expect_count=item.get('expect_count'))
+                                                      product=product, expect_count=item.get('expect_count'), price=price,
+                                                              total_price=price * int(item.get('expect_count')))
                     count += int(item['expect_count'])
                     # 更新每一个商品的发货数量
                     pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
@@ -161,6 +195,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                         pitem.expect_count += to_int(titem.expect_count)
                     else:
                         pitem.expect_count = to_int(titem.expect_count)
+                    pitem.price = price # 更新单价
                     pitem.save()
                 inbound.expect_count = count
                 inbound.save()
@@ -185,7 +220,6 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         instance.save()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-
 
     # 是否需要更新商品信息
     def _update_product(self, product, data):
@@ -223,6 +257,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     pitem = PurchasingOrderItems.objects.get(order=purchasing_order, product=product)
                     add_int(pitem, 'received_count', item.received_count)
                     add_int(pitem, 'damage_count', item.damage_count)
+                    add_float(pitem, 'total_fee', item.total_price)
                     pitem.save()
                     # 统计
                     received_count += int(item.received_count)
@@ -267,6 +302,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 # 加到采购单对应商品中
                 poi = PurchasingOrderItems.objects.get(product=product, order=traffic_order.purchasing_order)
                 add_float(poi, 'traffic_fee', item.traffic_fee)
+                poi.total_fee += float(item.traffic_fee)
                 poi.save()
             # 加到商品成本中
             self._add_to_prodcut_inventory(item)
@@ -276,8 +312,8 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         product = item.product
         count = int(item.received_count) - to_int(item.damage_count)   # 需要减去损坏数量
         # 找出商品单价
-        poi = PurchasingOrderItems.objects.get(order_id=item.purchasing_order_id, product=product)
-        new_cost = (item.received_count * poi.price + to_float(item.traffic_fee)) / float(count)      # 由于支付尾款时是按总数量支付的，因此损坏的数量也要算上去
+        # poi = PurchasingOrderItems.objects.get(order_id=item.purchasing_order_id, product=product)
+        new_cost = (item.total_price + to_float(item.traffic_fee)) / float(count)      # 由于支付尾款时是按总数量支付的，因此损坏的数量也要算上去
         # 需要处以汇率
         new_cost = new_cost / get_exchange_rate()
         # 更新商品当前国内总成本

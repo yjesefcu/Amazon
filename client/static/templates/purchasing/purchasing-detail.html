@@ -38,6 +38,7 @@
                 </div>
                 <div class="form-group col-sm-3 col-xs-6">
                     <span >订单状态：</span><span>{{order.status.name}}</span>
+                    <button class="btn btn-primary" ng-if="order.status.code==='WaitForPayment' && userRole==='finance'" ng-click="openPayModal()">确认付款金额</button>
                 </div>
                 <div class="form-group col-sm-3 col-xs-6">
                     <span >当前责任人：</span><span>{{order.status.role_name}}</span>
@@ -56,6 +57,7 @@
                     <span >商品总价：</span><span>{{order.total_price}}元</span>
                 </div>
             </div>
+            <!--
             <div class="row">
                 <div class="form-group col-sm-3 col-xs-6">
                     <span >预付款：</span><span>{{order.deposit}}元</span>
@@ -74,6 +76,7 @@
                     <span >总支付：</span><span>{{order.total_payed}}元</span>
                 </div>
             </div>
+            -->
             <div class="row">
                 <div class="form-group col-sm-3 col-xs-6">
                     <span >到货数量：</span><span>{{order.received_count}}</span>
@@ -97,8 +100,8 @@
                 ng-if="userRole==='purchasing_agent' && order.status.code==='WaitForDepositPayed'">
                 <i class="fa fa-pencil"></i> 编辑
             </a>
-            <a class="btn btn-warning" href="" ng-click="closeOrder()"
-                ng-if="userRole==='purchasing_agent' && order.status.code==='WaitForCheck'">
+            <a class="btn btn-warning" href="" ng-click="toCloseOrder()"
+                ng-if="userRole==='purchasing_agent' && (order.status.code==='WaitForCheck' || order.status.code==='PurchasingPaymentRefresh')">
                 已全部入库，提交财务处理
             </a>
         </div>
@@ -121,7 +124,8 @@
                             <th>描述</th>
                             <th>采购数量</th>
                             <th>单价(元)</th>
-                            <th>总价</th>
+                            <th>预计总价(元)</th>
+                            <th>总花费(元)</th>
                             <th>已入库数量</th>
                             <th>损坏数量</th>
                             <th>物流费(元)</th>
@@ -135,6 +139,7 @@
                             <td>{{ p.count}}</td>
                             <td>{{ p.price }}</td>
                             <td>{{p.total_price}}</td>
+                            <td>{{ p.total_fee }}</td>
                             <td>{{p.received_count}}</td>
                             <td>{{p.damage_count}}</td>
                             <td>{{ p.traffic_fee }}</td>
@@ -195,6 +200,7 @@
         </div>
     </div>
     -->
+    <!--
     <div class="box box-primary">
         <div class="box-body">
             <div class="box-header with-border">
@@ -217,5 +223,6 @@
 
         </div>
     </div>
+    -->
     <div class="row" ui-view=""></div>
 </section>

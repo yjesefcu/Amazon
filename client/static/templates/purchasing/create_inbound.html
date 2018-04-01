@@ -17,12 +17,14 @@
                     <input type="text" class="form-control" placeholder="物流单号" ng-model="order.tracking_number" required>
                 </div>
             </div>
+            <!--
             <div class="col-sm-6">
                 <h4>尾款(元)：</h4>
                 <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
                     <input type="text" class="form-control" placeholder="没有尾款可不填" ng-model="order.final_payment" required>
                 </div>
             </div>
+            -->
         </div>
         <h3>商品列表</h3>
         <span>注：未发货的商品，无需填发货数量</span>
@@ -31,19 +33,30 @@
                 <tr>
                     <th>商品SKU</th>
                     <th>图片</th>
+                    <th>单价(元)</th>
                     <th>预定数量</th>
                     <th>已入库数量</th>
                     <th>本次发货数量</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-repeat="item in items">
                     <td>{{ item.product.SellerSKU }}</td>
                     <td><img ng-src="{{ item.product.Image }}"> </td>
+                    <td>
+                        <span ng-if="!item.isEdit">{{ item.price }}</span>
+                        <input type="text" ng-if="item.isEdit" class="short-input" ng-model="item.newPrice">
+                    </td>
                     <td>{{ item.count }}</td>
                     <td>{{ item.received_count }}</td>
                     <td>
                         <input type="text" ng-model="item.expect_count" class="short-input">
+                    </td>
+                    <td>
+                        <button class="btn btn-default" ng-click="changePrice(item)" ng-if="!item.isEdit">修改单价</button>
+                        <button class="btn btn-primary" ng-click="savePrice(item)" ng-if="item.isEdit">确定</button>
+                        <button class="btn btn-default" ng-click="item.isEdit=false" ng-if="item.isEdit">取消</button>
                     </td>
                 </tr>
             </tbody>
