@@ -73,37 +73,44 @@
         <section class="sidebar">
             <ul class="sidebar-menu">
                 <li class="header">MAIN NAVIGATION</li>
-                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/users')==0 }" ng-if="userRole==='admin'">
-                    <a ui-sref="index.users" ng-click="currentUrl='/users'">
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/users')==0 }" ng-if="userRole==='admin'"
+                    ng-click="chooseMenu('/users')">
+                    <a ui-sref="index.users">
                         <i class="fa  fa-users"></i>
                         <span>用户管理</span>
                     </a>
                 </li>
-                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/product')==0 }">
-                    <a ui-sref="index.products" ng-click="currentUrl='/products'">
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/product')==0 }"
+                    ng-click="chooseMenu('/products')">
+                    <a ui-sref="index.products">
                         <i class="fa  fa-file-text-o"></i>
                         <span>商品列表</span>
                     </a>
                 </li>
-                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/gifts')==0 }" ng-if="userRole === 'godown_manager'">
-                    <a ui-sref="index.gifts" ng-click="currentUrl='/gifts'">
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/gifts')==0 }" ng-if="userRole === 'godown_manager'"
+                    ng-click="chooseMenu('/gifts')">
+                    <a ui-sref="index.gifts">
                         <i class="fa  fa-file-text-o"></i>
                         <span>赠品商品打包</span>
                     </a>
                 </li>
-                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/purchasing')==0 }">
-                    <a ui-sref="index.purchasing" ng-click="currentUrl='/purchasing'">
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/purchasing')==0 }"
+                    ng-click="chooseMenu('/purchasing')">
+                    <a ui-sref="index.purchasing">
                         <i class="fa  fa-file-text-o"></i>
                         <span>采购单管理</span>
                     </a>
                 </li>
-                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/shipment')==0 }" ng-if="userRole==='admin' || userRole==='operator' || userRole==='godown_manager'">
-                    <a ui-sref="index.shipment" ng-click="currentUrl='/shipment'">
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/shipment')==0 }"
+                    ng-if="userRole==='admin' || userRole==='operator' || userRole==='godown_manager'"
+                    ng-click="chooseMenu('/shipment')">
+                    <a ui-sref="index.shipment">
                         <i class="fa fa-truck"></i> <span>移库货件</span>
                     </a>
                 </li>
-                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/settlement')==0 }" ng-if="userRole==='admin' || userRole==='finance'">
-                    <a ui-sref="index.settlement" ng-click="currentUrl='/settlement'">
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/settlement')==0 }" ng-if="userRole==='admin' || userRole==='finance'"
+                    ng-click="chooseMenu('/settlement')">
+                    <a ui-sref="index.settlement">
                         <i class="fa fa-dollar "></i> <span>结算中心</span>
                     </a>
                 </li>
@@ -136,6 +143,7 @@
     <script src="/static/components/angular-bootstrap/ui-bootstrap.min.js"></script>
     <script src="/static/components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
     <script src="/static/components/angularjs-datepicker/dist/angular-datepicker.js"></script>
+    <script src="/static/js/html2canvas.min.js"></script>
     <script src="/static/js/services/service-factory.js"></script>
     <script src="/static/js/services/file-upload.js"></script>
     <script src="/static/js/controllers/product-ctrl.js"></script>

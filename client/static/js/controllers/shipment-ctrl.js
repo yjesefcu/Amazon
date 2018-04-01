@@ -178,8 +178,40 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
             });
     };
 
+    var boxIndex = 0;
     $scope.addBox = function () {
-        $scope.boxs.push({});
+        $scope.boxs.push({index: boxIndex});
+        boxIndex += 1;
+    };
+
+    $scope.delBox = function (index) {
+        for (var i=0; i<$scope.boxs.length; i++) {
+            if ($scope.boxs[i].index == index) {
+                var box = $scope.boxs[i];
+                $scope.boxs.splice(i, 1);
+                // 将已经填好的数量减去
+                var boxProducts = box.products;
+                if (boxProducts) {
+                    $scope.items.forEach(function (p) {
+                        if (boxProducts[p.id]) {
+                            p.boxed_count -= parseInt(boxProducts[p.id]);
+                        }
+                    });
+                }
+                break;
+            }
+        }
+    };
+
+    $scope.boxCountInput = function (product) {
+        var count = 0;
+        $scope.boxs.forEach(function (box) {
+            if (box.products && box.products[product.id])
+            {
+                count += parseInt(box.products[product.id]);
+            }
+        });
+        product.boxed_count = count;
     };
 
     $scope.deleteShipment = function(){
@@ -263,6 +295,36 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
         });
         modalInstance.result.then(function (result) {
             getShipment();
+        });
+    };
+
+    // 重量或长度转换
+    $scope.measureChange = function (box, key) {
+        if (key === 'itn_weight') {
+            box.weight = box.itn_weight ? (parseFloat(box.itn_weight) * 0.453) : 0;
+        } else if (key === 'weight') {
+            box.itn_weight = box.weight ? (parseFloat(box.weight) * 2.204) : 0;
+        } else if (key.startsWith('itn_')) {
+            box[key.substring(4)] = box[key] ? (parseFloat(box[key]) * 2.54) : 0;
+        } else {
+            box['itn_' + key] = box[key] ? (parseFloat(box[key]) * 0.394) : 0;
+        }
+    };
+
+    $scope.downloadAsImage = function () {
+        // html2canvas(document.body).then(function(canvas) {
+        //      var imgUri = canvas.toDataURL("image/png", {}).replace("image/png", "image/octet-stream"); // 获取生成的图片的url
+        //      window.location.href= imgUri; // 下载图片
+        //  });
+        html2canvas(document.getElementById('shipment_detail')).then(function (canvas) {
+            var imgURL=canvas.toDataURL("image/png");
+                $('#myIMG').attr("src",imgURL);
+                // $('#b').on('click',function(){
+                //     $('#down_qr').attr('download',imgURL);
+                //     $('#down_qr').attr('href',imgURL);
+                //     document.getElementById('down_qr').click();
+                // });
+            window.location.href = imgURL;
         });
     };
 });

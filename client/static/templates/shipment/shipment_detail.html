@@ -1,223 +1,227 @@
-
-<section class="content-header">
-    <h1>
-        移库货件详情（{{ formData.status.name }}）
-    </h1>
-</section>
-<section class="content">
-    <div class="box box-primary" ng-if="!canEdit">
-        <div class="box-header with-border">
-          <h3 class="box-title">货件基本信息</h3>
+<div ng-controller="OutboundEditCtrl" id="shipment_detail">
+    <section class="content-header">
+        <h1>
+            移库货件详情（{{ formData.status.name }}） <button ng-click="downloadAsImage()">下载</button>
+        </h1>
+    </section>
+    <section class="content">
+        <div class="box box-primary" ng-if="!canEdit">
+            <div class="box-header with-border">
+              <h3 class="box-title">货件基本信息</h3>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >目的账号：</span><span>{{formData.market.account_name}}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >货件ID：</span><span>{{formData.code}}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >物流公司：</span><span>{{formData.company}}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >运单号：</span><span>{{formData.tracking_number}}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >货运方式：</span><span>{{formData.ship_type}}（体积参数:{{ formData.volume_args }}）</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >预计发货数量：</span><span>{{formData.count }}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >箱子数量：</span><span>{{formData.box_count }}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >实际发货数量：</span><span>{{formData.boxed_count }}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >运费(元)：</span><span>{{formData.traffic_fee }}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >关税(元)：</span><span>{{formData.tax_fee }}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >状态：</span><span>{{formData.status.name }}</span>
+                    </div>
+                    <div class="form-group col-sm-3 col-xs-6">
+                        <span >责任人：</span><span>{{formData.status.role_name }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="box-body">
-            <div class="row">
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >目的账号：</span><span>{{formData.market.account_name}}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >货件ID：</span><span>{{formData.code}}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >物流公司：</span><span>{{formData.company}}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >运单号：</span><span>{{formData.tracking_number}}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >货运方式：</span><span>{{formData.ship_type}}（体积参数:{{ formData.volume_args }}）</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >预计发货数量：</span><span>{{formData.count }}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >箱子数量：</span><span>{{formData.box_count }}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >实际发货数量：</span><span>{{formData.boxed_count }}</span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >运费(元)：</span><span>{{formData.traffic_fee }}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >关税(元)：</span><span>{{formData.tax_fee }}</span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >状态：</span><span>{{formData.status.name }}</span>
-                </div>
-                <div class="form-group col-sm-3 col-xs-6">
-                    <span >责任人：</span><span>{{formData.status.role_name }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row" ng-if="canEdit">
-        <div class="col-md-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">货件基本信息</h3>
-                </div>
-                <form role="form">
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >目的账号</label>
-                                <input type="text" class="form-control" ng-model="formData.market.account_name" disabled>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >货件Id</label>
-                                <input type="text" class="form-control" placeholder="亚马逊货件Id" ng-model="formData.code" ng-if="canEdit">
-                                <label class="form-control" ng-if="!canEdit">{{ formData.code }}</label>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >物流公司</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="formData.company" ng-blur="formData.volume_args=formData.company==='出口易'? 6000:5000" ng-if="canEdit">
-                                <label class="form-control" ng-if="!canEdit">{{ formData.company }}</label>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >运单号</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="formData.tracking_number" ng-if="canEdit">
-                                <label class="form-control" ng-if="!canEdit">{{ formData.tracking_number }}</label>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label>货运方式</label>
-                                <select class="form-control" ng-model="formData.ship_type" ng-change="trackingTypeChange()" ng-if="canEdit">
-                                    <option value="sea">海运</option>
-                                    <option value="air">空运</option>
-                                  </select>
-                                <label class="form-control" ng-if="!canEdit">{{ formData.ship_type }}</label>
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6" ng-if="formData.ship_type==='sea'">
-                                <label>体积参数</label>
-                                <select class="form-control" ng-model="formData.volume_args" ng-options="x for x in [5000,6000]" ng-if="canEdit">
-                                  </select>
-                                <label class="form-control" ng-if="!canEdit">{{ formData.volume_args }}</label>
+        <div class="row" ng-if="canEdit">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">货件基本信息</h3>
+                    </div>
+                    <form role="form">
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="form-group col-sm-3 col-xs-6">
+                                    <label >目的账号</label>
+                                    <input type="text" class="form-control" ng-model="formData.market.account_name" disabled>
+                                </div>
+                                <div class="form-group col-sm-3 col-xs-6">
+                                    <label >货件Id</label>
+                                    <input type="text" class="form-control" placeholder="亚马逊货件Id" ng-model="formData.code" ng-if="canEdit">
+                                    <label class="form-control" ng-if="!canEdit">{{ formData.code }}</label>
+                                </div>
+                                <div class="form-group col-sm-3 col-xs-6">
+                                    <label >物流公司</label>
+                                    <input type="text" class="form-control" placeholder="" ng-model="formData.company" ng-blur="formData.volume_args=formData.company==='出口易'? 6000:5000" ng-if="canEdit">
+                                    <label class="form-control" ng-if="!canEdit">{{ formData.company }}</label>
+                                </div>
+                                <div class="form-group col-sm-3 col-xs-6">
+                                    <label >运单号</label>
+                                    <input type="text" class="form-control" placeholder="" ng-model="formData.tracking_number" ng-if="canEdit">
+                                    <label class="form-control" ng-if="!canEdit">{{ formData.tracking_number }}</label>
+                                </div>
+                                <div class="form-group col-sm-3 col-xs-6">
+                                    <label>货运方式</label>
+                                    <select class="form-control" ng-model="formData.ship_type" ng-change="trackingTypeChange()" ng-if="canEdit">
+                                        <option value="sea">海运</option>
+                                        <option value="air">空运</option>
+                                      </select>
+                                    <label class="form-control" ng-if="!canEdit">{{ formData.ship_type }}</label>
+                                </div>
+                                <div class="form-group col-sm-3 col-xs-6" ng-if="formData.ship_type==='sea'">
+                                    <label>体积参数</label>
+                                    <select class="form-control" ng-model="formData.volume_args" ng-options="x for x in [5000,6000]" ng-if="canEdit">
+                                      </select>
+                                    <label class="form-control" ng-if="!canEdit">{{ formData.volume_args }}</label>
+                                </div>
                             </div>
                         </div>
+                    </form>
+                </div>
+                <!-- /.box -->
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 8px;">
+            <div class="col-sm-12">
+                <a class="btn btn-primary" title="编辑" ng-if="userRole === 'operator' && formData.status.code==='WaitForPack'"
+                   ui-sref="index.createShipment({id: formData.id})"><i class="fa fa-pencil"></i> 编辑</a>
+            </div>
+            <div class="col-sm-12" ng-if="userRole === formData.status.role && formData.status.code === 'WaitForSettle'">
+                <a class="btn btn-primary" ng-click="openFeeInputModal()">输入运费和关税</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">货运详情
+                            <button class="btn btn-primary" ng-click="addBox();" ng-if="canEdit">增加包装箱</button>
+                        </h3>
                     </div>
-                </form>
-            </div>
-            <!-- /.box -->
-        </div>
-    </div>
-    <div class="row" style="margin-bottom: 8px;">
-        <div class="col-sm-12">
-            <a class="btn btn-primary" title="编辑" ng-if="userRole === 'operator' && formData.status.code==='WaitForPack'"
-               ui-sref="index.createShipment({id: formData.id})"><i class="fa fa-pencil"></i> 编辑</a>
-        </div>
-        <div class="col-sm-12" ng-if="userRole === formData.status.role && formData.status.code === 'WaitForSettle'">
-            <a class="btn btn-primary" ng-click="openFeeInputModal()">输入运费和关税</a>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">货运详情
-                        <button class="btn btn-primary" ng-click="addBox();" ng-if="canEdit">增加包装箱</button>
-                    </h3>
-                </div>
-                <div class="box-body" style="overflow-y: auto;">
-                    <h4 style="color: red;" ng-show="error_msg">{{ error_msg }}</h4>
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                        <tr>
-                            <th style="width: 150px;">SKU</th>
-                            <th>图片</th>
-                            <th>名称</th>
-                            <th>商品包装尺寸<br>(长*高*宽)cm</th>
-                            <th style="width: 100px;">仓库<br>库存</th>
-                            <th style="width: 100px;">计划<br>发货数</th>
-                            <th ng-repeat="box in boxs" style="width: 140px;">箱子{{ $index+1 }}</th>
-                            <th style="width: 100px;">已装箱<br>数量</th>
-                            <th ng-if="formData.status.code === 'FINISH'">单位重量</th>
-                            <th ng-if="formData.status.code === 'FINISH'">总运费(元)</th>
-                            <th ng-if="formData.status.code === 'FINISH'">总关税(元)</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr ng-repeat="p in items">
-                            <td>{{p.SellerSKU}}</td>
-                            <td><img ng-src="{{ p.product.Image }}"> </td>
-                            <td>{{ p.product.TitleCn}}</td>
-                            <td>{{ p.product.package_length}}*{{p.product.package_height}}*{{p.product.package_width }}</td>
-                            <td>{{ p.product.domestic_inventory}}</td>
-                            <td>{{ p.count }}</td>
-                            <td ng-repeat="box in boxs">
-                                <input ng-model="box.products[p.id]" ng-if="canEdit">
-                                <span ng-if="!canEdit">{{ box.products[p.id] }}</span>
-                            </td>
-                            <td>{{ p.boxed_count }}</td>
-                            <td ng-if="formData.status.code === 'FINISH'">{{ p.unit_weight }}</td>
-                            <td ng-if="formData.status.code === 'FINISH'">{{ p.traffic_fee }}</td>
-                            <td ng-if="formData.status.code === 'FINISH'">{{ p.tax_fee }}</td>
-                        </tr>
-                        <tr>
-                            <td colspan="5">总数量</td>
-                            <td>{{ formData.count }}</td>
-                            <td ng-repeat="box in boxs">{{ box.count }}</td>
-                            <td>{{ formData.boxed_count }}</td>
-                            <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="6">包装箱重量(ib.)</td>
-                            <td ng-repeat="box in boxs">
-                                <input ng-model="box.itn_weight" ng-if="canEdit">
-                                <span ng-if="!canEdit">{{ box.itn_weight }}</span>
-                            </td>
-                            <td>{{ formData.total_itn_weight }}</td>
-                            <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="6">包装箱尺寸(长*宽*高)IN.</td>
-                            <td ng-repeat="box in boxs">
-                                <div ng-if="canEdit">
-                                    <input ng-model="box.itn_length" style="width: 30%">
-                                    <input ng-model="box.itn_width" style="width: 30%">
-                                    <input ng-model="box.itn_height" style="width: 30%">
-                                </div>
-                                <span ng-if="!canEdit">{{ box.itn_length }}*{{ box.itn_width }}*{{ box.itn_height }}</span>
-                            </td>
-                            <td></td>
-                            <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="6">包装箱重量(kg)</td>
-                            <td ng-repeat="box in boxs">
-                                <input ng-model="box.weight" ng-if="canEdit">
-                                <span ng-if="!canEdit">{{ box.weight }}</span>
-                            </td>
-                            <td>{{ formData.total_weight }}</td>
-                            <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="6">包装箱尺寸(长*宽*高)cm</td>
-                            <td ng-repeat="box in boxs">
-                                <div ng-if="canEdit">
-                                    <input ng-model="box.length" style="width: 30%">
-                                    <input ng-model="box.width" style="width: 30%">
-                                    <input ng-model="box.height" style="width: 30%">
-                                </div>
-                                <div ng-if="!canEdit">
-                                    {{ box.length }} * {{ box.width }} * {{ box.height }}
-                                </div>
-                            </td>
-                            <td></td>
-                            <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="box-body" style="overflow-y: auto;">
+                        <h4 style="color: red;" ng-show="error_msg">{{ error_msg }}</h4>
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th style="width: 150px;">SKU</th>
+                                <th>图片</th>
+                                <th>名称</th>
+                                <th>商品包装尺寸<br>(长*高*宽)cm</th>
+                                <th style="width: 100px;">仓库<br>库存</th>
+                                <th style="width: 100px;">计划<br>发货数</th>
+                                <th ng-repeat="box in boxs" style="width: 140px;">箱子{{ $index+1 }}
+                                    <a href="javascript:void(0)" class="fa fa-trash-o text-red" title="删除" ng-click="delBox(box.index)"></a>
+                                </th>
+                                <th style="width: 100px;">已装箱<br>数量</th>
+                                <th ng-if="formData.status.code === 'FINISH'">单位重量</th>
+                                <th ng-if="formData.status.code === 'FINISH'">总运费(元)</th>
+                                <th ng-if="formData.status.code === 'FINISH'">总关税(元)</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="p in items">
+                                <td>{{p.SellerSKU}}</td>
+                                <td><img ng-src="{{ p.product.Image }}"> </td>
+                                <td>{{ p.product.TitleCn}}</td>
+                                <td>{{ p.product.package_length}}*{{p.product.package_height}}*{{p.product.package_width }}</td>
+                                <td>{{ p.product.domestic_inventory}}</td>
+                                <td>{{ p.count }}</td>
+                                <td ng-repeat="box in boxs">
+                                    <input ng-model="box.products[p.id]" ng-if="canEdit" ng-change="boxCountInput(p)">
+                                    <span ng-if="!canEdit">{{ box.products[p.id] }}</span>
+                                </td>
+                                <td>{{ p.boxed_count }}</td>
+                                <td ng-if="formData.status.code === 'FINISH'">{{ p.unit_weight }}</td>
+                                <td ng-if="formData.status.code === 'FINISH'">{{ p.traffic_fee }}</td>
+                                <td ng-if="formData.status.code === 'FINISH'">{{ p.tax_fee }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5">总数量</td>
+                                <td>{{ formData.count }}</td>
+                                <td ng-repeat="box in boxs">{{ box.count }}</td>
+                                <td>{{ formData.boxed_count }}</td>
+                                <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="6">包装箱重量(ib.)</td>
+                                <td ng-repeat="box in boxs">
+                                    <input ng-model="box.itn_weight" ng-if="canEdit" ng-change="measureChange(box, 'itn_weight')">
+                                    <span ng-if="!canEdit">{{ box.itn_weight }}</span>
+                                </td>
+                                <td>{{ formData.total_itn_weight }}</td>
+                                <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="6">包装箱尺寸(长*宽*高)IN.</td>
+                                <td ng-repeat="box in boxs">
+                                    <div ng-if="canEdit">
+                                        <input ng-model="box.itn_length" style="width: 30%" ng-change="measureChange(box, 'itn_length')">
+                                        <input ng-model="box.itn_width" style="width: 30%" ng-change="measureChange(box, 'itn_width')">
+                                        <input ng-model="box.itn_height" style="width: 30%" ng-change="measureChange(box, 'itn_height')">
+                                    </div>
+                                    <span ng-if="!canEdit">{{ box.itn_length }}*{{ box.itn_width }}*{{ box.itn_height }}</span>
+                                </td>
+                                <td></td>
+                                <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="6">包装箱重量(kg)</td>
+                                <td ng-repeat="box in boxs">
+                                    <input ng-model="box.weight" ng-if="canEdit" ng-change="measureChange(box, 'weight')">
+                                    <span ng-if="!canEdit">{{ box.weight }}</span>
+                                </td>
+                                <td>{{ formData.total_weight }}</td>
+                                <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="6">包装箱尺寸(长*宽*高)cm</td>
+                                <td ng-repeat="box in boxs">
+                                    <div ng-if="canEdit">
+                                        <input ng-model="box.length" style="width: 30%" ng-change="measureChange(box, 'length')">
+                                        <input ng-model="box.width" style="width: 30%" ng-change="measureChange(box, 'width')">
+                                        <input ng-model="box.height" style="width: 30%" ng-change="measureChange(box, 'height')">
+                                    </div>
+                                    <div ng-if="!canEdit">
+                                        {{ box.length }} * {{ box.width }} * {{ box.height }}
+                                    </div>
+                                </td>
+                                <td></td>
+                                <td colspan="3" ng-if="formData.status.code === 'FINISH'"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row" ng-if="userRole === formData.status.role && formData.status.code === 'WaitForPack'">
-        <div class="col col-md-12">
-            <button ng-click="update()" class="btn btn-primary" ng-if="!isSubmitting">保存</button>
-            <button class="btn btn-primary " disabled ng-if="isSubmitting">正在提交...</button>
+        <div class="row" ng-if="userRole === formData.status.role && formData.status.code === 'WaitForPack'">
+            <div class="col col-md-12">
+                <button ng-click="update()" class="btn btn-primary" ng-if="!isSubmitting">保存</button>
+                <button class="btn btn-primary " disabled ng-if="isSubmitting">正在提交...</button>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
+</div>
+<img id="myIMG">

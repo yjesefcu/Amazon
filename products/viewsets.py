@@ -212,7 +212,7 @@ class SettlementViewSet(NestedViewSetMixin, ModelViewSet):
 
 class ProductViewSet(NestedViewSetMixin, ModelViewSet):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    serializer_class = ProductWithGigftsSeriazlier
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('MarketplaceId',)

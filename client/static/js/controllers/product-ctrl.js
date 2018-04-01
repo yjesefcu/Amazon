@@ -129,17 +129,17 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
             $scope.formData = result.data;
             $scope.productIcon = serviceFactory.mediaPath(result.data.Image);
         });
+        // 获取赠品信息
+        $http.get(serviceFactory.getProductDetail($scope.productId) + 'gifts/').then(function (response) {
+            $scope.gifts = response.data;
+        }).catch(function (exception) {
+            $rootScope.addAlert('danger', '获取赠品信息失败');
+        });
         // getSupplies($scope.productId);
         // getShipments($scope.productId);
         getSettlements($scope.productId);
         // getPurchasingOrders($scope.productId);
     }
-    // 获取赠品信息
-    $http.get(serviceFactory.getProductDetail($scope.productId) + 'gifts/').then(function (response) {
-        $scope.gifts = response.data;
-    }).catch(function (exception) {
-        $rootScope.addAlert('danger', '获取赠品信息失败');
-    });
     $scope.submitForm = function () {
         var url = serviceFactory.createProduct(), method='post';
         if ($scope.productId){
