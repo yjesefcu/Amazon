@@ -10,10 +10,12 @@ class OrderStatus(models.Model):
     WaitForProducing = 2        # 等待采购员填写生产完成信息
     WaitForPaying = 3           # 等待财务尾款打款
     WaitForTraffic = 4          # 等待采购员补充物流信息
-    WaitForInbound = 5          # 等待仓库入库
-    WaitForCheck = 6            # 等待采购确认
-    WaitForTrafficFeePayed = 7  # 等待物流费打款
-    FINISH = 8                  # 完成
+    TrafficConfirm = 5          # 等待到货
+    WaitForInbound = 6          # 等待仓库入库
+    TrafficReceived = 7         # 入库
+    WaitForCheck = 8            # 等待采购确认
+    WaitForPayment = 9  # 等待物流费打款
+    FINISH = 10                # 完成
     WaitForPack = 100           # 移库：等待打包
     WaitForSettle = 101         # 移库：等待结账
     ShipmentFinish = 102        # 移库：已关闭
@@ -43,13 +45,6 @@ class PurchasingOrder(models.Model):
     create_time = models.DateTimeField(null=True, blank=True)   # 采购单创建时间
     status = models.ForeignKey(OrderStatus)      # 采购单状态
     total_price = models.FloatField(null=True, blank=True)  # 商品总价
-    traffic_fee = models.FloatField(null=True, blank=True)  # 物流费
-    other_fee = models.FloatField(null=True, blank=True)    # 杂费
-    deposit = models.FloatField(null=True, blank=True)      # 预付款
-    deposit_payed = models.FloatField(null=True, blank=True)    # 已缴纳的预付款
-    traffic_fee_payed = models.FloatField(null=True, blank=True)    # 已缴纳的物流费
-    other_fee_payed = models.FloatField(null=True, blank=True)      # 已缴纳的杂费
-    final_payment_payed = models.FloatField(null=True, blank=True)  # 已交尾款
     expect_date = models.DateField(null=True, blank=True)   # 交期
 
     # 数量相关
@@ -59,9 +54,17 @@ class PurchasingOrder(models.Model):
     damage_count = models.IntegerField(null=True, blank=True, default=0)    # 损坏数量
 
     # 费用相关
-    next_to_pay = models.FloatField(null=True, blank=True)      # 下一步需要支付的数额
+    deposit = models.FloatField(null=True, blank=True)      # 预付款
+    deposit_payed = models.FloatField(null=True, blank=True)    # 已缴纳的预付款
+    traffic_fee = models.FloatField(null=True, blank=True)  # 物流费
+    traffic_fee_payed = models.FloatField(null=True, blank=True)    # 已缴纳的物流费
+    final_payment = models.FloatField(null=True, blank=True)    # 尾款
+    final_payment_payed = models.FloatField(null=True, blank=True)  # 已交尾款
+    other_fee = models.FloatField(null=True, blank=True)    # 杂费
+    other_fee_payed = models.FloatField(null=True, blank=True)      # 已缴纳的杂费
     total_payed = models.FloatField(null=True, blank=True)      # 总支付的数额
-    next_payment_comment = models.TextField(max_length=255, null=True, blank=True)  # 支付说明
+    # next_to_pay = models.FloatField(null=True, blank=True)      # 下一步需要支付的数额
+    # next_payment_comment = models.TextField(max_length=255, null=True, blank=True)  # 支付说明
 
 
 class PurchasingOrderItems(models.Model):
@@ -98,12 +101,13 @@ class TrackingOrder(models.Model):
     input_date = models.DateField(null=True, blank=True)   # 到货日期
     tracking_company = models.CharField(max_length=255, null=True, blank=True)      # 物流公司
     tracking_number = models.CharField(max_length=255, null=True, blank=True)      # 物流单号
-    traffic_fee = models.FloatField(null=True, blank=True)      # 物流费
+    final_payment = models.FloatField(null=True, blank=True)        # 尾款
+    traffic_fee = models.FloatField(null=True, blank=True)          # 物流费
     traffic_fee_payed = models.FloatField(null=True, blank=True)    # 已缴纳的物流费
     status = models.ForeignKey(OrderStatus)
     expect_count = models.IntegerField(null=True, blank=True)    # 已发货数量
-    received_count = models.IntegerField(null=True, blank=True, default=0)    # 已到货数量
-    damage_count = models.IntegerField(null=True, blank=True, default=0)    # 损坏数量
+    received_count = models.IntegerField(null=True, blank=True)    # 已到货数量
+    damage_count = models.IntegerField(null=True, blank=True)    # 损坏数量
 
 
 class TrackingOrderItems(models.Model):
@@ -127,4 +131,3 @@ class PaymentRecord(models.Model):
     creator = models.ForeignKey(User, null=True, blank=True)       # 付款人
     fee_comment = models.CharField(max_length=100, null=True, blank=True)   # 款项说明
     payment_comment = models.CharField(max_length=255, null=True, blank=True)   # 支付说明
-

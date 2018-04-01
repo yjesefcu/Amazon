@@ -95,5 +95,13 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
             url: '/addInbound',
             templateUrl: 'static/templates/purchasing/create_inbound.html'
         })
+        .state('index.gifts', {
+            url: 'gifts',
+            templateUrl: 'static/templates/gift/gift-list.html'
+        })
+        .state('index.giftsCreate', {
+            url: 'gifts/create',
+            templateUrl: 'static/templates/gift/gift-create.html'
+        })
     ;
 }]);

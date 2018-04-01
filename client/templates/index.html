@@ -85,6 +85,12 @@
                         <span>商品列表</span>
                     </a>
                 </li>
+                <li class="treeview" ng-class="{'active': currentUrl.indexOf('/gifts')==0 }" ng-if="userRole === 'godown_manager'">
+                    <a ui-sref="index.gifts" ng-click="currentUrl='/gifts'">
+                        <i class="fa  fa-file-text-o"></i>
+                        <span>赠品商品打包</span>
+                    </a>
+                </li>
                 <li class="treeview" ng-class="{'active': currentUrl.indexOf('/purchasing')==0 }">
                     <a ui-sref="index.purchasing" ng-click="currentUrl='/purchasing'">
                         <i class="fa  fa-file-text-o"></i>
@@ -137,6 +143,7 @@
     <script src="/static/js/controllers/settlement-ctrl.js"></script>
     <script src="/static/js/controllers/user-ctrl.js"></script>
     <script src="/static/js/controllers/purchasing-ctrl.js"></script>
+    <script src="/static/js/controllers/gift-ctrl.js"></script>
     <script src="/static/js/jquery/bootstrap-filestyle/bootstrap-filestyle.min.js"></script>
     <!--<script src="/static/components/AdminLTE/dist/js/demo.js"></script>-->
     {% endverbatim %}

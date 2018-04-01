@@ -48,13 +48,13 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         items_data = data.get('items')
-        MarketplaceId = data.get('MarketplaceId')
+        del data['items']
         try:
             with transaction.atomic():
-                order = ShipmentOrder.objects.create(MarketplaceId=MarketplaceId, create_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA))
+                order = ShipmentOrder.objects.create(create_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA), **data)
                 count = 0
                 for item_data in items_data:
-                    product = Product.objects.get(MarketplaceId=MarketplaceId, SellerSKU=item_data.get('SellerSKU'))
+                    product = Product.objects.get(SellerSKU=item_data.get('SellerSKU'))
                     ShipmentOrderItem.objects.create(order=order, product=product, SellerSKU=item_data.get('SellerSKU'), count=item_data.get('count'))
                     count += int(item_data.get('count'))
                 order.count = count

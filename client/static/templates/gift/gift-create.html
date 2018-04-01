@@ -1,0 +1,62 @@
+
+<section class="content-header">
+    <h1>
+        带赠品的商品打包
+    </h1>
+</section>
+<section class="content" ng-controller="GiftPackingCreateCtrl">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">本次发货的商品信息
+                        <button class="btn btn-primary" ng-click="addItem();">添加商品</button>
+                    </h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" style="overflow-y: auto;">
+                    <h4 style="color: red;" ng-show="error_msg">{{ error_msg }}</h4>
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 200px;">SKU</th>
+                                <th>图片</th>
+                                <th>商品名称</th>
+                                <th>关联商品</th>
+                                <th>打包数量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="p in items">
+                                <td>
+                                    <div class="dropdown">
+                                        <input class="lg dropdown-toggle" data-toggle="dropdown" ng-model="p.SellerSKU"
+                                               ng-change="skuSearch(p.SellerSKU)" ng-click="focusSearchInput($event, p.SellerSKU)" style="width: 98%;">
+                                        <ul class="dropdown-menu result-dropdown" style="left:{{ searchResultsPosition.x }};top:{{ searchResultsPosition.y }}">
+                                            <li><a style="color:#333;">共{{ searchResults.length }}个商品</a></li>
+                                            <li role="presentation" class="divider"></li>
+                                            <li ng-repeat="tmp in searchResults">
+                                                <a role="menuitem" tabindex="-1" href="javascript:void(0)" ng-click="chooseProduct(p, tmp)">
+                                                {{ tmp.SellerSKU }}<span style="margin-left:20px;color:#999;">{{ tmp.TitleCn }}</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                <td><img ng-src="{{ p.product.Image }}" ng-if="p.product.Image"></td>
+                                <td style="word-wrap:break-word;width: 250px;">{{ p.product.TitleCn }}</td>
+                                <td>
+                                    <img ng-repeat="gp in p.product.gifts" ng-src="{{ gp.Image }}">
+                                </td>
+                                <td><input class="lg" ng-model="p.count"></td>
+                                <td><a class="fa fa-trash-o text-red" ng-click="delItem(p.SellerSKU);" title="删除该记录"></a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-primary" ng-click="save();" style="margin-left: 16px;">保存</button>
+</section>

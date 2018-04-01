@@ -53,6 +53,11 @@
                                 </dl>
                             </div>
                         </div>
+                        <div class="row" ng-if="gifts.length">
+                            <div class="col-sm-12">
+                                <label>关联商品：</label><img ng-repeat="p in gifts" ng-src="{{ p.Image }}">
+                            </div>
+                        </div>
                     </div>
             </div>
             <!-- /.box -->

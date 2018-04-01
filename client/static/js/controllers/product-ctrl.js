@@ -113,6 +113,7 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
     $scope.formData = {'MarketplaceId': $rootScope.MarketplaceId};
     $scope.productIcon = '';
     $scope.thumb = {};
+    $scope.gifts = [];  // 赠品
     $scope.supplies = [];   // 入库货件
     $scope.shipments = [];  // 移库货件
     $scope.purchasingOrders = [];   // 采购单
@@ -133,11 +134,27 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
         getSettlements($scope.productId);
         // getPurchasingOrders($scope.productId);
     }
+    // 获取赠品信息
+    $http.get(serviceFactory.getProductDetail($scope.productId) + 'gifts/').then(function (response) {
+        $scope.gifts = response.data;
+    }).catch(function (exception) {
+        $rootScope.addAlert('danger', '获取赠品信息失败');
+    });
     $scope.submitForm = function () {
         var url = serviceFactory.createProduct(), method='post';
         if ($scope.productId){
             url = serviceFactory.getProductDetail($scope.productId);
             method = 'patch';
+        }
+        // 赠品信息
+        var gifts = '';
+        if ($scope.gifts.length) {
+            $scope.gifts.forEach(function (n, i) {
+               gifts += ',' + n.SellerSKU;
+            });
+            $scope.formData.gifts = gifts.substring(1);
+        } else {
+            $scope.formData.gifts = '';
         }
         $http({
             url: url,
@@ -281,6 +298,67 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
                 $scope.isCalculating = false;
             });
     };
+
+    // 增加赠品
+    $scope.addGift = function () {
+        $scope.gifts.push({});
+    };
+    // 删除赠品
+    $scope.deleteGift = function (sku) {
+        for (var i=0; i<$scope.gifts.length; i++){
+            if ($scope.gifts[i].SellerSKU == sku) {
+                $scope.gifts.splice(i, 1);
+                break;
+            }
+        }
+    };
+
+
+    if ($stateParams.products && $stateParams.products.length) {
+        $stateParams.products.forEach(function (p) {
+           $scope.items.push({SellerSKU: p.SellerSKU, product: p});
+        });
+    }
+    // 商品搜索
+    $scope.products = [];
+    function getProducts () {
+        $http.get("/api/products").then(function (result) {
+            $scope.products = result.data;
+        });
+    }
+
+    $scope.focusSearchInput = function ($event, sku) {
+        var offset = $($event.target).offset();
+        $scope.searchResultsPosition = {x: offset.left+'px', y: (offset.top+24)+'px'};
+        $scope.skuSearch(sku);
+    };
+
+    $scope.skuSearch = function (sku) {     // 商品搜索
+        if (!sku) {
+            $scope.searchResults = $scope.products;
+            return;
+        }
+        var results = [];
+        sku = sku.toLowerCase();
+        $scope.products.forEach(function (p) {
+           if (p.SellerSKU.toLowerCase().indexOf(sku) >= 0) {
+               results.push(p);
+           }
+        });
+        $scope.searchResults = results;
+    };
+
+    $scope.chooseProduct = function (sku, product) {
+        for (var i=0; i<$scope.gifts.length; i++){
+            if ($scope.gifts[i].SellerSKU == sku) {
+                $scope.gifts[i] = product;
+                break;
+            }
+        }
+    };
+
+    getProducts();
+    // 用于商品搜索
 });
 
 app.controller('ProductOrdersCtrl', function ($scope, $rootScope, $http, $location, $state, $stateParams, $timeout, serviceFactory) {

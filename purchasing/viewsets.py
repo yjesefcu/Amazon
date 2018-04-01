@@ -46,9 +46,9 @@ def add_float(obj, field, value):
     if not value:
         return
     if getattr(obj, field):
-        setattr(obj, field, getattr(obj, field) + float(value))
+        setattr(obj, field, getattr(obj, field) + to_float(value))
     else:
-        setattr(obj, field, float(value))
+        setattr(obj, field, to_float(value))
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -68,9 +68,7 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         items = data.get('items')
         del data['items']
         create_time = datetime.datetime.now().replace(tzinfo=TZ_ASIA)
-        data['next_to_pay'] = data.get('deposit')
-        data['next_payment_comment'] = u'预付款'
-        data['status_id'] = OrderStatus.WaitForDepositPayed
+        data['status_id'] = OrderStatus.WaitForTraffic
         data['create_time'] = create_time
         exist_order_id = data.get('id')
         if exist_order_id:
@@ -109,9 +107,6 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        data = request.data
-        if instance.status_id == OrderStatus.WaitForProducing:
-            data['next_to_pay'] = instance.total_price - instance.deposit
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -126,25 +121,12 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
     @detail_route(methods=['post'])
     def payed(self, request, pk, **kwargs):
         order = self.get_object()
-        fee = to_float(request.data.get('payed'))
-        order.next_to_pay -= fee
-        add_float(order, 'total_payed', fee)
-        fee_comment = ''
-        if order.status_id == OrderStatus.WaitForDepositPayed: # 打预付款
-            order.status_id = OrderStatus.WaitForProducing
-            fee_comment = u'预付款'
-        elif order.status_id == OrderStatus.WaitForPaying:
-            order.status_id = OrderStatus.WaitForTraffic
-            fee_comment = u'尾款'
-        try:
-            with transaction.atomic():
-                order.save()
-                PaymentRecord.objects.create(order=order, fee_comment=fee_comment,
-                                             pay_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA),
-                                             creator=request.user, **request.data)
-        except IntegrityError, ex:
-            raise IntegrityError(ex)
-        return Response()
+        data = request.data
+        order.deposit_payed = to_float(data.get('deposit_payed'))
+        order.final_payment_payed = to_float(data.get('final_payment_payed'))
+        order.traffic_fee_payed = to_float(data.get('traffic_fee_payed'))
+        order.total_payed = order.deposit_payed + order.final_payment_payed + order.traffic_fee_payed
+        # 比较实际付款与需要付的金额，将差异的部分从成本中减去
 
 
 class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
@@ -157,7 +139,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         _query_dict = self.get_parents_query_dict()
         purchasing_order = PurchasingOrder.objects.get(pk=_query_dict['purchasing_order'])
         today = datetime.datetime.now().replace(tzinfo=TZ_ASIA).date()
-        status_id = OrderStatus.WaitForInbound
+        status_id = OrderStatus.TrafficConfirm
         data = request.data
         items = request.data['items']
         del data['items']
@@ -187,12 +169,23 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     purchasing_order.expect_count += count
                 else:
                     purchasing_order.expect_count = count
+                add_float(purchasing_order, 'final_payment', data.get('final_payment'))
                 purchasing_order.status_id = status_id
                 purchasing_order.save()
         except IntegrityError, ex:
             raise IntegrityError(ex)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @detail_route(methods=['post'])
+    def received(self, request, pk, **kwargs):
+        # 确认到货
+        instance = self.get_object()
+        instance.status_id = OrderStatus.WaitForInbound     # 状态更新为等待入库
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 
     # 是否需要更新商品信息
     def _update_product(self, product, data):
@@ -211,7 +204,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         data = request.data
         instance = self.get_object()
         input_date = datetime.datetime.now().replace(tzinfo=TZ_ASIA).date()
-        status_id = OrderStatus.WaitForTrafficFeePayed
+        status_id = OrderStatus.TrafficReceived
         # 如果product的尺寸有更新
         received_count = 0
         damage_count = 0
@@ -247,10 +240,12 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 add_int(purchasing_order, 'received_count', received_count)
                 add_int(purchasing_order, 'damage_count', damage_count)
                 add_float(purchasing_order, 'traffic_fee', data.get('traffic_fee'))
-                add_float(purchasing_order, 'next_to_pay', data.get('traffic_fee'))
-                purchasing_order.next_payment_comment = '物流费'
-                purchasing_order.status_id = status_id
+                purchasing_order.status_id = OrderStatus.WaitForCheck
                 purchasing_order.save()
+
+                # 更新运费到每个商品
+                self._split_traffic_fee(instance)
+                # 入库后立即更新国内库存和成本
         except IntegrityError, ex:
             raise IntegrityError(ex)
         serializer = self.get_serializer(instance)
@@ -263,14 +258,16 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         total_weight = 0
         for item in items:
             total_weight += item.product.weight * item.received_count
+        total_traffic_fee = to_float(traffic_order.traffic_fee)
         for item in items:
-            product = item.product
-            item.traffic_fee = (product.weight * item.received_count) / total_weight * traffic_order.traffic_fee_payed
-            item.save()
-            # 加到采购单对应商品中
-            poi = PurchasingOrderItems.objects.get(product=product, order=traffic_order.purchasing_order)
-            add_float(poi, 'traffic_fee', item.traffic_fee)
-            poi.save()
+            if total_traffic_fee:
+                product = item.product
+                item.traffic_fee = (product.weight * item.received_count) / total_weight * total_traffic_fee
+                item.save()
+                # 加到采购单对应商品中
+                poi = PurchasingOrderItems.objects.get(product=product, order=traffic_order.purchasing_order)
+                add_float(poi, 'traffic_fee', item.traffic_fee)
+                poi.save()
             # 加到商品成本中
             self._add_to_prodcut_inventory(item)
 
@@ -280,7 +277,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         count = int(item.received_count) - to_int(item.damage_count)   # 需要减去损坏数量
         # 找出商品单价
         poi = PurchasingOrderItems.objects.get(order_id=item.purchasing_order_id, product=product)
-        new_cost = (item.received_count * poi.price + item.traffic_fee) / float(count)      # 由于支付尾款时是按总数量支付的，因此损坏的数量也要算上去
+        new_cost = (item.received_count * poi.price + to_float(item.traffic_fee)) / float(count)      # 由于支付尾款时是按总数量支付的，因此损坏的数量也要算上去
         # 需要处以汇率
         new_cost = new_cost / get_exchange_rate()
         # 更新商品当前国内总成本
@@ -289,79 +286,3 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         product.supply_cost = total / product.domestic_inventory
         product.cost = product.supply_cost + to_float(product.shipment_cost)
         product.save()
-
-    @detail_route(methods=['post'])
-    def confirm(self, request, pk, **kwargs):
-        # 确认入库数量
-        instance = self.get_object()
-        if instance.traffic_fee:
-            # 如果物流费不为0，那么需要等待物流费打款
-            status_id = OrderStatus.WaitForTrafficFeePayed
-        else:
-            status_id = OrderStatus.FINISH
-        instance.status_id = status_id
-        instance.save()
-
-        # 如果订单所有货物已到货，那么关闭订单
-        order = instance.order
-        order.status_id = status_id
-        order.save()
-        if status_id == OrderStatus.FINISH:
-            self._check_inbound_finish(instance)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    @detail_route(methods=['post'])
-    def payed(self, request, pk, **kwargs):
-        # 物流费打款
-        instance = self.get_object()
-        fee = to_float(request.data.get('traffic_fee_payed'))
-        try:
-            with transaction.atomic():
-                instance.traffic_fee_payed = fee
-                instance.status_id = OrderStatus.FINISH
-                instance.save()
-
-                order = instance.purchasing_order
-                add_float(order, 'total_payed', fee)
-                order.next_to_pay -= fee
-                order.status_id = OrderStatus.WaitForCheck  # 更新状态为等待确认
-                order.save()
-
-                # 增加一条打款记录
-                PaymentRecord.objects.create(order=order, traffic_order=instance, fee_comment=u'物流费', need_payed=instance.traffic_fee, payed=fee,
-                                             payment_comment=request.data.get('payment_comment'),
-                                             pay_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA), creator=request.user)
-
-                # 平摊运费
-                self._split_traffic_fee(instance)
-        except IntegrityError, ex:
-            raise IntegrityError(ex)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def _check_inbound_finish(self, instance):
-        # 入库单已完成
-        order = instance.order
-        if order.received_count < order.count:
-            # 如果实际入库数量 < 采购数量，说明订单还未结束
-            order.status_id = OrderStatus.WaitForTraffic
-        else:
-            order.status_id = OrderStatus.FINISH
-        order.save()
-        if not instance.count:
-            return
-        # 修改商品的国内库存
-        product = instance.product
-        inventory = product.domestic_inventory
-        if not inventory:
-            inventory = 0
-        product.domestic_inventory = inventory + int(instance.count)
-        # 更新商品成本
-        # 计算本次入库的商品成本
-        new_cost = (instance.count * instance.order.price + to_float(instance.traffic_fee)) / float(instance.count)
-        # 更新商品当前国内总成本
-        product.supply_cost = (to_float(product.supply_cost) + new_cost) / float(2)
-        product.cost = product.supply_cost + to_float(product.shipment_cost)
-        product.save()
-

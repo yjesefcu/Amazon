@@ -30,6 +30,9 @@ settlement.register(r'refunds', RefundViewSet, base_name="api_settlement_refunds
 settlement.register(r'removals', RemovalViewSet, base_name="api_settlement_removals", parents_query_lookups=['settlement'])
 settlement.register(r'losts', ProductLostViewSet, base_name="api_settlement_losts", parents_query_lookups=['settlement'])
 
+gift_packing = router.register(r'gifts/packing', GiftPackingViewSet, base_name='api_packings')
+
+
 urlpatterns = patterns('',
     url(r'^api/', include(router.urls)),
     url(r'^product/sku/$', 'products.views.get_product_by_sku'),

@@ -4,6 +4,7 @@
 from django.db import models
 from products.models import Product
 from purchasing.models import OrderStatus
+from amazon_services.models import MarketAccount
 
 # Create your models here.
 
@@ -51,7 +52,6 @@ class ShipmentBox(models.Model):
     itn_length = models.FloatField(null=True, blank=True)       # 包装长度 in. 英寸
     itn_width = models.FloatField(null=True, blank=True)       # 包装宽度 in. 英寸
     products = models.TextField(null=True, blank=True)
-
 
 
 class BoxProductRelations(models.Model):

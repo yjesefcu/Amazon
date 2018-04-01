@@ -3,6 +3,7 @@ import json, pytz, datetime
 from rest_framework import serializers
 from products.serializer import ProductSerializer
 from purchasing.serializer import OrderStatusSerializer
+from amazon_services.serializer import MarketSerializer
 from models import *
 
 
@@ -15,6 +16,13 @@ class FloatRoundField(serializers.FloatField):
         if not value:
             return value
         return round(float(value), 2)
+
+
+class MarketAccountField(serializers.DictField):
+
+    def to_representation(self, value):
+        account = MarketAccount.objects.get(pk=value)
+        return MarketSerializer(account).data
 
 
 class DateTimeFormat(serializers.DateTimeField):
@@ -49,6 +57,7 @@ class ShipmentOrderSerializer(serializers.ModelSerializer):
     create_time = DateTimeFormat()
     items = ShipmentOrderItemSerializer(many=True)
     status = OrderStatusSerializer()
+    market = MarketAccountField(source='MarketplaceId')
 
     class Meta:
         model = ShipmentOrder

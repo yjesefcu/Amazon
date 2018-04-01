@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 __author__ = 'liucaiyun'
-import os, datetime, chardet, threading
+import os, datetime, chardet, threading, pytz
 from django.conf import settings
 from rest_framework_extensions.mixins import NestedViewSetMixin
 from rest_framework.viewsets import ModelViewSet
@@ -17,6 +17,8 @@ from serializer import *
 from api import FileImporter, to_float, get_float, ValidationChecker, ProductIncomeCalc, SettlementIncomeCalc
 from errors import Error
 from data_export import DataExport
+
+TZ_ASIA = pytz.timezone('Asia/Shanghai')
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -231,6 +233,57 @@ class ProductViewSet(NestedViewSetMixin, ModelViewSet):
     def calc(self, request, pk):
         # 计算某个产品的成本
         product = Product.objects.get(pk=pk)
+
+    @list_route(methods=['get'], url_path='gifts')
+    def get_all_gifts(self, request):
+        products = Product.objects.filter(gifts__isnull=False)
+        return Response(ProductWithGigftsSeriazlier(products, many=True).data)
+
+    @detail_route(methods=['get', 'post'], url_path='gifts')
+    def get_or_add_gifts(self, request, pk):
+        product = self.get_object()
+        if request.method == 'POST':
+            gifts = request.data.get("gifts")
+            product.gifts = gifts if gifts else None
+            product.save()
+            return Response()
+        else:
+            if not product.gifts:
+                return Response([])
+            else:
+                gifts_sku_list = product.gifts.split(',')
+                gifts = Product.objects.filter(SellerSKU__in=gifts_sku_list)
+                return Response(self.get_serializer(gifts, many=True).data)
+
+
+class GiftPackingViewSet(NestedViewSetMixin, ModelViewSet):
+    queryset = GiftPacking.objects.all()
+    serializer_class = GiftPackingSerializer
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def create(self, request, *args, **kwargs):
+        items = request.data.get('items')
+        now = datetime.datetime.now()
+        for item in items:
+            product = Product.objects.get(SellerSKU=item['product'].get('SellerSKU'))
+            count = int(item.get('count'))
+            GiftPacking.objects.create(product=product, count=count,
+                                       create_time=now)
+            # 从各自商品的库存中减去，并将所有成本相加
+            gifts = Product.objects.filter(SellerSKU__in=product.gifts.split(','))
+            cost = 0
+            for p in gifts:
+                p.domestic_inventory = (p.domestic_inventory - count) if p.domestic_inventory else -count
+                p.save()
+                cost += int(p.supply_cost) if p.supply_cost else 0
+            # 计算最终商品的成本，增加库存
+            if product.domestic_inventory and product.supply_cost:
+                product.supply_cost = (product.supply_cost * product.domestic_inventory + cost * count) / (product.domestic_inventory + count)
+            else:
+                product.supply_cost = cost
+            product.domestic_inventory = (product.domestic_inventory + count) if product.domestic_inventory else count
+            product.save()
+        return Response()
 
 
 class SupplyViewSet(NestedViewSetMixin, ModelViewSet):

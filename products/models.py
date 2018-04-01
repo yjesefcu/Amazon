@@ -5,7 +5,7 @@ from django.db import models
 
 
 class Product(models.Model):
-    MarketplaceId = models.CharField(max_length=30, db_index=True)     # 市场Id
+    MarketplaceId = models.CharField(max_length=30, db_index=True, null=True, blank=True)     # 市场Id
     SellerSKU = models.CharField(max_length=50, verbose_name='SKU', db_index=True)
     ASIN = models.CharField(max_length=20, null=True, blank=True, verbose_name='Asin', db_index=True)
     FNSKU = models.CharField(max_length=20, null=True, blank=True, verbose_name='FNSKU')
@@ -37,10 +37,17 @@ class Product(models.Model):
     last_supply = models.DateField(null=True, blank=True, verbose_name=u'上一次入库日期')
     last_oversea = models.DateField(null=True, blank=True, verbose_name=u'上一次移库日期')
     sold_count = models.IntegerField(default=0, verbose_name=u'已销售数量')
+    gifts = models.CharField(max_length=255, null=True, blank=True)     # 赠品商品SKU
 
     class Meta:
         unique_together = (('MarketplaceId', 'SellerSKU',),)
         ordering = ['SellerSKU']
+
+    def get_gifts(self):
+        if not self.gifts:
+            return None
+        gifts = Product.objects.filter(SellerSKU__in=self.gifts.split(','))
+        return gifts
 
 
 class InboundShipment(models.Model):
@@ -575,3 +582,10 @@ class SettlementDataRecord(models.Model):
     data_type = models.CharField(max_length=20)     # 数据类型
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
+
+
+class GiftPacking(models.Model):
+    # 赠品打包记录
+    product = models.ForeignKey(Product)
+    count = models.IntegerField()
+    create_time = models.DateTimeField()

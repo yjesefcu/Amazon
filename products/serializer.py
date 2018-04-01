@@ -72,9 +72,19 @@ class SettlementSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    supply_cost = FloatRoundField(read_only=True)
 
     class Meta:
         model = Product
+        fields = '__all__'
+
+
+class ProductWithGigftsSeriazlier(serializers.ModelSerializer):
+
+    gifts = ProductSerializer(source='get_gifts', many=True)
+
+    class Meta:
+        model= Product
         fields = '__all__'
 
 
@@ -259,3 +269,18 @@ class RefundItemSerializer(SimpleRefundItemSerializer):
         exclude = ['product']
 
 
+class DateTimezoneFormat(serializers.DateTimeField):
+
+    def to_representation(self, value):
+        if not value:
+            return ''
+        return (value + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M')
+
+
+class GiftPackingSerializer(serializers.ModelSerializer):
+    product = ProductSerializer()
+    create_time = DateTimezoneFormat()
+
+    class Meta:
+        model = GiftPacking
+        fields = '__all__'
