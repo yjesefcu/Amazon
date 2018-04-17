@@ -301,16 +301,11 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
 
     // 增加赠品
     $scope.addGift = function () {
-        $scope.gifts.push({});
+        $scope.gifts.push({SellerSKU: ''});
     };
     // 删除赠品
-    $scope.deleteGift = function (sku) {
-        for (var i=0; i<$scope.gifts.length; i++){
-            if ($scope.gifts[i].SellerSKU == sku) {
-                $scope.gifts.splice(i, 1);
-                break;
-            }
-        }
+    $scope.deleteGift = function (index) {
+        $scope.gifts.splice(index, 1);
     };
 
 

@@ -158,7 +158,7 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
             $scope.order = result.data;
             $scope.product = result.data.product;
             var code = $scope.order.status.code;
-            if ($rootScope.userRole === 'purchasing_agent' && (code === 'WaitForTraffic' || code === 'WaitForInbound' || code === 'TrafficConfirm'))  // 只有采购才能添加物流
+            if ($rootScope.userRole === 'purchasing_agent' && (code === 'WaitForTraffic' || code === 'WaitForInbound' || code === 'TrafficConfirm') || code === 'WaitForCheck')  // 只有采购才能添加物流
             {
                 $scope.canCreate = true;
             } else {
@@ -345,6 +345,21 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
         });
     };
 
+    $scope.openInboundDetailModal = function (inboundOrder) {        // 打开物流单详情
+        var modalInstance = $uibModal.open({
+            size: 'lg',
+            templateUrl : '/static/templates/purchasing/inboud-detail.html',//script标签中定义的id
+            controller : 'PurchasingInputDetailModalCtrl',//modal对应的Controller
+            resolve : {
+                data : function() {     //data作为modal的controller传入的参数
+                    return {
+                        order: inboundOrder
+                    };//用于传递数据
+                }
+            }
+        });
+    };
+
     $scope.openPayModal = function (trafficOrder) {        // 物流费打款对话框
         var modalInstance = $uibModal.open({
             templateUrl : '/static/templates/purchasing/traffic_fee_confirm.html',//script标签中定义的id
@@ -387,6 +402,7 @@ app.controller('PurchasingAddInboundModalCtrl', function ($scope, $http, $rootSc
     $scope.error = '';
 
     $scope.items.forEach(function (n) {
+        n.remain_count = n.count - (n.expect_count ? n.expect_count : 0);
         n.expect_count = 0;
     });
 
@@ -434,6 +450,22 @@ app.controller('PurchasingAddInboundModalCtrl', function ($scope, $http, $rootSc
     $scope.savePrice = function (item) {
         item.price = item.newPrice;
         item.isEdit = false;
+    };
+});
+
+app.controller('PurchasingInputDetailModalCtrl', function ($scope, $http, $rootScope, $state, data, $uibModalInstance) {
+    $scope.order = data.order;
+
+    // function getData() {
+    //     $http.get('/api/inbounds/'+$scope.order.id + '/').then(function (result) {
+    //         $scope.order = result.data;
+    //     });
+    // }
+    //
+    // getData();
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
     };
 });
 

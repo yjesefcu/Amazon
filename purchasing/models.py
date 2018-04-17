@@ -46,7 +46,7 @@ class PurchasingOrder(models.Model):
     create_time = models.DateTimeField(null=True, blank=True)   # 采购单创建时间
     status = models.ForeignKey(OrderStatus)      # 采购单状态
     total_price = models.FloatField(null=True, blank=True)  # 商品总价
-    expect_date = models.DateField(null=True, blank=True)   # 交期
+    expect_date = models.CharField(max_length=50, null=True, blank=True)   # 交期
 
     # 数量相关
     count = models.IntegerField(null=True, blank=True, default=0)       # 采购数量

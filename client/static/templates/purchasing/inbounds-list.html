@@ -26,7 +26,7 @@
                     </thead>
                     <tbody>
                     <tr ng-repeat="p in inbounds" table-repeat-directive>
-                        <td>{{ p.tracking_number}}</td>
+                        <td><a href="javascript:void(0)" ng-click="openInboundDetailModal(p)">{{ p.tracking_number}}</a></td>
                         <td>{{p.tracking_company}}</td>
                         <td>{{ p.shipping_date}}</td>
                         <td>{{ p.expect_count}}</td>

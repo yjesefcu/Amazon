@@ -1,0 +1,52 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">创建物流信息</h4>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal" id="inboundForm">
+        <div class="box-body">
+            <div class="col-sm-6">
+                <h4>物流公司：</h4>
+                <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
+                    <label type="text" class="form-control">{{ order.tracking_company }} </label>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <h4>物流单号：</h4>
+                <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
+                    <label type="text" class="form-control">{{ order.tracking_number }}</label>
+                </div>
+            </div>
+        </div>
+        <h3>商品列表</h3>
+        <span>注：未发货的商品，无需填发货数量</span>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>商品SKU</th>
+                    <th>图片</th>
+                    <th>单价(元)</th>
+                    <th>发货时间</th>
+                    <th>已入库数量</th>
+                    <th>本次发货数量</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in order.items">
+                    <td>{{ item.product.SellerSKU }}</td>
+                    <td><img ng-src="{{ item.product.Image }}"> </td>
+                    <td>{{ item.price }}</td>
+                    <td>{{ order.shipping_date }}</td>
+                    <td>{{ item.received_count }}</td>
+                    <td>{{ item.expect_count }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </form>
+    <div class="text-red">{{ error }}</div>
+</div>
+<div class="modal-footer">
+    <!--<button type="button" class="btn btn-default pull-left" data-dismiss="modal" ng-click="cancel()">取消</button>-->
+    <button type="button" class="btn btn-primary" ng-click="cancel()">确定</button>
+</div>

@@ -217,6 +217,12 @@ class ProductViewSet(NestedViewSetMixin, ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('MarketplaceId',)
 
+    def create(self, request, *args, **kwargs):
+        product = Product.objects.create(**request.data)
+        serializer = self.get_serializer(product)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     @detail_route(methods=['get'])
     def settlements(self, request, pk):
         product = self.get_object()
