@@ -128,6 +128,28 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
     };
 });
 
+
+app.directive('purchasingOrderRepeatDirective', function($timeout) {
+    return function(scope, element, attrs) {
+        if (scope.$last){   // 表格repeat完毕
+            $timeout(function(){
+                if (angular.element(element.parent().parent())[0].nodeName == 'TABLE'){
+                    angular.element(element.parent().parent())
+                        .DataTable({
+                        "paging": true,
+                        "lengthChange": true,
+                        "searching": true,
+                        "ordering": false,
+                        "info": true,
+                        "autoWidth": false
+                    });
+                }
+            }, 1000);
+            scope.initDeleteConfirm();
+        }
+    };
+});
+
 app.controller('PurchasingOrderListCtrl', function ($scope, $http, $rootScope, $timeout) {
     $scope.orders = [];
 
@@ -151,9 +173,11 @@ app.controller('PurchasingOrderListCtrl', function ($scope, $http, $rootScope, $
         });
         $scope.orders = todos.concat(others);
     }
-    $timeout(function () {
 
-        $('.fa-trash-o').each(function (i, n) {
+    $scope.initDeleteConfirm = function () {
+        $timeout(function () {
+
+        $('#purchasingListTable .fa-trash-o').each(function (i, n) {
             $(this).confirmation({
                 animation: true,
                 placement: "bottom",
@@ -169,7 +193,8 @@ app.controller('PurchasingOrderListCtrl', function ($scope, $http, $rootScope, $
                 }
             });
         });
-    }, 1000);
+        }, 1000);
+    };
 
     function deleteOrder(index) {
         $http.delete('/api/purchasing/' + $scope.orders[index].id).then(function (result) {

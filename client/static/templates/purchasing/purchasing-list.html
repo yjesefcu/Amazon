@@ -13,7 +13,7 @@
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body">
-                    <table id="productTable" class="table table-bordered table-hover">
+                    <table id="purchasingListTable" class="table table-bordered table-hover">
                         <thead>
                             <tr>
                                 <th>序号</th>
@@ -32,7 +32,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="p in orders"table-repeat-directive>
+                            <tr ng-repeat="p in orders" purchasing-order-repeat-directive>
                                 <td><a href="#" ui-sref="index.purchasingDetail({orderId: p.id})"> {{ $index + 1 }}</a></td>
                                 <td>{{ p.contract_number }}</td>
                                 <td>{{ p.supplier }}</td>
