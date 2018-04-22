@@ -39,7 +39,7 @@
                                 <td><a ui-sref="index.productDetail({productId: p.id})">{{ p.SellerSKU }}</a></td>
                                 <td><img src="{{ host }}{{ p.Image }}"></td>
                                 <td style="max-width: 100px;">{{ p.TitleCn }}</td>
-                                <td><img ng-repeat="g in p.gifts" ng-src="{{ g.Image }}"> </td>
+                                <td><span ng-repeat="g in p.gifts">{{ g.SellerSKU }};</span> </td>
                                 <td>{{ p.domestic_inventory }}</td>
                                 <td>{{ p.supply_cost }}</td>
                                 <td>{{ p.amazon_inventory }}</td>

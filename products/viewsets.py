@@ -223,6 +223,15 @@ class ProductViewSet(NestedViewSetMixin, ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        for field in request.data:
+            setattr(instance, field, request.data.get(field))
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     @detail_route(methods=['get'])
     def settlements(self, request, pk):
         product = self.get_object()

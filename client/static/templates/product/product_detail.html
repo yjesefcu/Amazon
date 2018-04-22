@@ -55,7 +55,11 @@
                         </div>
                         <div class="row" ng-if="gifts.length">
                             <div class="col-sm-12">
-                                <label>关联商品：</label><img ng-repeat="p in gifts" ng-src="{{ p.Image }}">
+                                <label>关联商品：</label>
+                                <label ng-repeat="p in gifts">
+
+                                    {{ p.SellerSKU }}<img ng-src="{{ p.Image }}">;
+                                </label>
                             </div>
                         </div>
                     </div>

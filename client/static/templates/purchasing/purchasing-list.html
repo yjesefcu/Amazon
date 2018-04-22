@@ -52,6 +52,8 @@
                                     <a ui-sref="index.purchasingDetail({orderId: p.id})" ng-if="p.canEdit">处理</a>
                                     <a class="fa fa-pencil" ui-sref="index.purchasingCreate({id: p.id})"
                                        ng-if="userRole==='purchasing_agent' && p.status.code==='WaitForDepositPayed'" title="修改"></a>
+                                    <a class="fa fa-trash-o text-red"
+                                       ng-if="userRole==='admin' && p.status.code ==='WaitForTraffic'" title="确定删除？"></a>
                                 </td>
                             </tr>
                         </tbody>

@@ -182,6 +182,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
 
                 # 增加商品的发货数量信息
                 count = 0
+                price_diff = 0      # 商品价格差异
                 for item in items:
                     product = Product.objects.get(pk=item['product']['id'])
                     price = to_float(item.get('price'))
@@ -191,14 +192,24 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     count += int(item['expect_count'])
                     # 更新每一个商品的发货数量
                     pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
+                    old_price = pitem.price
+                    pitem.price = price # 更新单价
+                    if old_price != price:
+                        # 由于单价修改是对剩下的所有未发货商品都生效，因此将商品差价 * 剩余未发货的数量
+                        diff = (price - old_price) * (pitem.count - (pitem.expect_count if pitem.expect_count else 0))
+                        pitem.total_price += diff       # 将商品总价加上差价
+                        price_diff += diff
+                    # 更新完单价再更新发货数量
                     if pitem.expect_count:
                         pitem.expect_count += to_int(titem.expect_count)
                     else:
                         pitem.expect_count = to_int(titem.expect_count)
-                    pitem.price = price # 更新单价
                     pitem.save()
                 inbound.expect_count = count
                 inbound.save()
+                if price_diff:
+                    # 增加商品总价的差价
+                    purchasing_order.total_price += price_diff
                 # 更新订单本身的状态
                 if purchasing_order.expect_count:
                     purchasing_order.expect_count += count

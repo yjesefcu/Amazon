@@ -28,6 +28,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
     $scope.contract = {};
     $scope.searchResults = [];
     $scope.searchResultsPosition = {};
+    $scope.itemError = '';
 
     if ($stateParams.products && $stateParams.products.length) {
         $stateParams.products.forEach(function (p) {
@@ -81,6 +82,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
 
     $scope.addOrderItem = function () {
         $scope.order.items.push({});
+        $scope.itemError = '';
     };
 
     $scope.delete = function (forward) {
@@ -100,12 +102,19 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
     };
 
     $scope.save = function () {
+        if ($scope.orderForm.$invalid) {
+            return;
+        }
         var items = [];
         $scope.order.items.forEach(function (n) {
            if (n.SellerSKU && n.count) {
                items.push(n);
            }
         });
+        if (!items.length) {
+            $scope.itemError = '至少选择一个商品';
+            return;
+        }
         $scope.order.items = items;
         $http.post('/api/purchasing/', $scope.order).then(function (result) {
             $state.go('index.purchasingDetail', {orderId: result.data.id});
@@ -119,7 +128,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
     };
 });
 
-app.controller('PurchasingOrderListCtrl', function ($scope, $http, $rootScope) {
+app.controller('PurchasingOrderListCtrl', function ($scope, $http, $rootScope, $timeout) {
     $scope.orders = [];
 
     function getData() {
@@ -141,6 +150,34 @@ app.controller('PurchasingOrderListCtrl', function ($scope, $http, $rootScope) {
            }
         });
         $scope.orders = todos.concat(others);
+    }
+    $timeout(function () {
+
+        $('.fa-trash-o').each(function (i, n) {
+            $(this).confirmation({
+                animation: true,
+                placement: "bottom",
+                title: "确定删除？",
+                btnOkClass: 'text-red',
+                href: 'javascript:void(0)',
+                btnCancelClass: '',
+                btnOkLabel: '是',
+                btnCancelLabel: '否',
+                onConfirm: function () {
+                    var index = i;
+                    deleteOrder(index);
+                }
+            });
+        });
+    }, 1000);
+
+    function deleteOrder(index) {
+        $http.delete('/api/purchasing/' + $scope.orders[index].id).then(function (result) {
+            $rootScope.addAlert('info', '删除成功');
+            $scope.orders.splice(index, 1);
+        }).catch(function (result) {
+            $rootScope.addAlert('error', '删除失败');
+        })
     }
 
     getData();

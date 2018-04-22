@@ -14,13 +14,33 @@
                 </div>
                 <!-- /.box-header -->
                 <!-- form start -->
-                <form role="form">
+                <form role="form" novalidate name="orderForm" >
                     <div class="box-body">
                         <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >合同单号</label>
-                                <input type="text" class="form-control" placeholder="请输入合同单号" ng-model="order.contract_number">
+                                <label >合同单号<span class="text-red">*</span></label>
+                                <input name="contract_number" type="text" class="form-control" placeholder="请输入合同单号" ng-model="order.contract_number" required>
+                                <span class="text-red" ng-show="orderForm.contract_number.$invalid">合同号不能为空</span>
                             </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >经办人<span class="text-red">*</span></label>
+                                <input name="operator" type="text" class="form-control" placeholder="" ng-model="order.operator" required>
+                                <span class="text-red" ng-show="orderForm.operator.$invalid">经办人不能为空</span>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label >交货时间<span class="text-red">*</span> </label>
+                                <div class="datepicker">
+                                    <div class="datepicker"
+                                         date-format="yyyy-MM-dd"
+                                         button-prev='<i class="fa fa-arrow-circle-left"></i>'
+                                         button-next='<i class="fa fa-arrow-circle-right"></i>'>
+                                        <input name="expect_date" ng-model="order.expect_date" type="text" placeholder="预计交货日期" class="angular-datepicker-input form-control" required />
+                                    </div>
+                                </div>
+                                <div class="text-red" ng-show="orderForm.expect_date.$invalid">交货时间不能为空</div>
+                            </div>
+                        </div>
+                        <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >供应商</label>
                                 <input type="text" class="form-control" placeholder="请输入供应商名称" ng-model="order.supplier">
@@ -32,14 +52,6 @@
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >联系方式</label>
                                 <input type="text" class="form-control" placeholder="供应商联系号码" ng-model="order.contact_phone">
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >经办人</label>
-                                <input type="text" class="form-control" placeholder="" ng-model="order.operator">
-                            </div>
-                            <div class="form-group col-sm-3 col-xs-6">
-                                <label >交货时间</label>
-                                <input type="text" class="form-control" placeholder="预计交货日期，格式：2018-01-01" ng-model="order.expect_date">
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >预付款</label>
@@ -57,6 +69,7 @@
                 <div class="box-header with-border">
                     <h3 class="box-title">商品列表
                         <button class="btn btn-primary" ng-click="addOrderItem();">添加商品</button>
+                        <span ng-show="itemError" class="text-red">{{ itemError }}</span>
                     </h3>
                 </div>
                 <!-- /.box-header -->
