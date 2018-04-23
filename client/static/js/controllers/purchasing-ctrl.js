@@ -487,7 +487,7 @@ app.controller('PurchasingAddInboundModalCtrl', function ($scope, $http, $rootSc
         $http.post('/api/purchasing/' + purchasingId + '/inbounds/', $scope.order).then(function (result) {
             $rootScope.addAlert('info', '提交成功');
             $uibModalInstance.close();
-            $state.go('index.purchasingDetail({orderId: orderId})');
+            location.reload();
         }).catch(function (error) {
             $rootScope.addAlert('error', '提交失败');
         });
