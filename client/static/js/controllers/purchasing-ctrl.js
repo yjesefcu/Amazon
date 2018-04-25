@@ -323,6 +323,51 @@ app.controller('PurchasingOrderDetailCtrl', function ($scope, $http, $rootScope,
             $scope.refresh();
         });
     };
+
+    $scope.clickEditOrderInfo = function () {       // 点击编辑基本信息
+        var modalInstance = $uibModal.open({
+            templateUrl : '/static/templates/purchasing/order_basic_info_editor.html',//script标签中定义的id
+            controller : 'PurchasingOrderBasicInfoEditCtrl',//modal对应的Controller
+            resolve : {
+                data : function() {//data作为modal的controller传入的参数
+                    return {
+                        order: $scope.order
+                    };//用于传递数据
+                }
+            }
+        });
+        modalInstance.result.then(function (result) {
+            $scope.refresh();
+        });
+    };
+});
+
+// 订单基本信息修改
+app.controller('PurchasingOrderBasicInfoEditCtrl', function ($scope, $http, $uibModalInstance, $rootScope, data) {
+    $scope.order = $.extend({}, data.order);
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
+    };
+
+    $scope.save = function () {
+        if ($scope.orderForm.$invalid) {
+            return;
+        }
+        var postData = {
+            contract_number: $scope.order.contract_number,
+            operator: $scope.order.operator,
+            expect_date: $scope.order.expect_date,
+            supplier: $scope.order.supplier,
+            contact_person: $scope.order.contact_person,
+            contact_phone: $scope.order.contact_phone
+        };
+        $http.patch('/api/purchasing/' + $scope.order.id, postData).then(function (result) {
+            $scope.cancel();
+        }).catch(function (error) {
+            $rootScope.addAlert('danger', '更新采购单失败');
+        });
+    };
 });
 
 // 订单付款对话框
@@ -368,13 +413,35 @@ app.controller('PurchasingOrderPaymentCtrl', function ($scope, $http, $uibModalI
     };
 });
 
+// 物流记录表格repeat
+app.directive('purchasingInboundsRepeatDirective', function($timeout) {
+    return function(scope, element, attrs) {
+        if (scope.$last){   // 表格repeat完毕
+            $timeout(function(){
+                if (angular.element(element.parent().parent())[0].nodeName == 'TABLE'){
+                    angular.element(element.parent().parent())
+                        .DataTable({
+                        "paging": true,
+                        "lengthChange": true,
+                        "searching": true,
+                        "ordering": false,
+                        "info": true,
+                        "autoWidth": false
+                    });
+                }
+            }, 1000);
+            scope.initDeleteConfirm();
+        }
+    };
+});
+
 // 采购单的物流单
-app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
+app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal, $timeout, $rootScope) {
 
     $scope.orderId = $scope.$parent.orderId;
 
     function getInbounds () {
-        var url = $scope.orderId ? '/api/purchasing/' + $scope.orderId + '/inbounds/' : '/api/inbounds'
+        var url = $scope.orderId ? '/api/purchasing/' + $scope.orderId + '/inbounds/' : '/api/inbounds';
         $http.get(url).then(function (result) {
             $scope.inbounds = result.data;
         }).catch(function (error) {
@@ -407,7 +474,10 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
         });
     };
 
-    $scope.openInboundDetailModal = function (inboundOrder) {        // 打开物流单详情
+    $scope.openInboundDetailModal = function ($event, inboundOrder) {        // 打开物流单详情
+        if ($event.target.tagName === 'A') {
+            return;
+        }
         var modalInstance = $uibModal.open({
             size: 'lg',
             templateUrl : '/static/templates/purchasing/inboud-detail.html',//script标签中定义的id
@@ -454,6 +524,40 @@ app.controller('PurchasingInboundsCtrl', function ($scope, $http, $uibModal) {
         modalInstance.result.then(function (result) {
             getInbounds();
         });
+    };
+
+    // 删除confirm
+    $scope.initDeleteConfirm = function () {
+        $timeout(function () {
+
+        $('#inbounds_table .fa-trash-o').each(function (i, n) {
+            $(this).confirmation({
+                animation: true,
+                placement: "bottom",
+                title: "确定删除？",
+                btnOkClass: 'text-red',
+                href: 'javascript:void(0)',
+                btnCancelClass: '',
+                btnOkLabel: '是',
+                btnCancelLabel: '否',
+                onConfirm: function () {
+                    var index = i;
+                    deleteInbound(index);
+                }
+            });
+
+        });
+        }, 1000);
+    };
+
+    function deleteInbound(index) {  // 删除发货记录
+        $http.delete('/api/purchasing/' + $scope.orderId + '/inbounds/' + $scope.inbounds[index].id).then(function (response) {
+            $rootScope.addAlert("info", '删除成功');
+            $scope.inbounds.splice(index, 1);
+            location.reload();      // 刷新页面
+        }).catch(function (response) {
+            $rootScope.addAlert("danger", '删除失败');
+        });
     }
 });
 
@@ -475,7 +579,7 @@ app.controller('PurchasingAddInboundModalCtrl', function ($scope, $http, $rootSc
     $scope.save = function () {
         var items = [];
         $scope.items.forEach(function (n) {
-            if (n.expect_count) {
+            if (n.expect_count && parseInt(n.expect_count) > 0) {
                 items.push(n);
             }
         });

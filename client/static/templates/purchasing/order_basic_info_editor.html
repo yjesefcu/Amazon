@@ -1,0 +1,53 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">创建物流信息</h4>
+</div>
+<div class="modal-body">
+    <form role="form" novalidate name="orderForm" >
+        <div class="box-body">
+            <div class="row">
+                <div class="form-group col-sm-6 col-xs-6">
+                    <label >合同单号<span class="text-red">*</span></label>
+                    <input name="contract_number" type="text" class="form-control" placeholder="请输入合同单号" ng-model="order.contract_number" required>
+                    <span class="text-red" ng-show="orderForm.contract_number.$invalid">合同号不能为空</span>
+                </div>
+                <div class="form-group col-sm-6 col-xs-6">
+                    <label >经办人<span class="text-red">*</span></label>
+                    <input name="operator" type="text" class="form-control" placeholder="" ng-model="order.operator" required>
+                    <span class="text-red" ng-show="orderForm.operator.$invalid">经办人不能为空</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-6 col-xs-6">
+                    <label >交货时间<span class="text-red">*</span> </label>
+                    <div class="datepicker">
+                        <div class="datepicker"
+                             date-format="yyyy-MM-dd"
+                             button-prev='<i class="fa fa-arrow-circle-left"></i>'
+                             button-next='<i class="fa fa-arrow-circle-right"></i>'>
+                            <input name="expect_date" ng-model="order.expect_date" type="text" placeholder="预计交货日期" class="angular-datepicker-input form-control" required />
+                        </div>
+                    </div>
+                    <div class="text-red" ng-show="orderForm.expect_date.$invalid">交货时间不能为空</div>
+                </div>
+                <div class="form-group col-sm-6 col-xs-6">
+                    <label >供应商</label>
+                    <input type="text" class="form-control" placeholder="请输入供应商名称" ng-model="order.supplier">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-6 col-xs-6">
+                    <label >联系人</label>
+                    <input type="text" class="form-control" placeholder="供应商联系人" ng-model="order.contact_person">
+                </div>
+                <div class="form-group col-sm-6 col-xs-6">
+                    <label >联系方式</label>
+                    <input type="text" class="form-control" placeholder="供应商联系号码" ng-model="order.contact_phone">
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-primary" ng-click="save()">保存</button>
+</div>

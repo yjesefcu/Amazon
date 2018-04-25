@@ -39,6 +39,10 @@ class Product(models.Model):
     sold_count = models.IntegerField(default=0, verbose_name=u'已销售数量')
     gifts = models.CharField(max_length=255, null=True, blank=True)     # 赠品商品SKU
 
+    # 采购信息
+    purchasing_count = models.IntegerField(null=True, blank=True)   # 采购但未入库的数量
+    purchasing_expect_count = models.IntegerField(null=True, blank=True)    # 等待入库的数量
+
     class Meta:
         unique_together = (('MarketplaceId', 'SellerSKU',),)
         ordering = ['SellerSKU']

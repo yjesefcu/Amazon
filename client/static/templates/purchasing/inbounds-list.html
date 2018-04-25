@@ -9,7 +9,7 @@
             </div>
             <!-- /.box-header -->
             <div class="box-body">
-                <table class="table table-bordered table-hover">
+                <table class="table table-bordered table-hover" id="inbounds_table">
                     <thead>
                     <tr>
                         <th>物流单号</th>
@@ -25,12 +25,12 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr ng-repeat="p in inbounds" table-repeat-directive ng-click="openInboundDetailModal(p)">
+                    <tr ng-repeat="p in inbounds" purchasing-inbounds-repeat-directive ng-click="openInboundDetailModal($event, p)">
                         <td>{{ p.tracking_number}}</td>
                         <td>{{p.tracking_company}}</td>
                         <td>{{ p.shipping_date}}</td>
                         <td>{{ p.expect_count}}</td>
-                            <td>{{ p.final_payment }}</td>
+                        <td>{{ p.final_payment }}</td>
                         <td>{{ p.received_count }}</td>
                         <td>{{p.damage_count}}</td>
                         <td>{{ p.status.name }}</td>
@@ -39,6 +39,8 @@
                             <a href="javascript:void(0)" ng-click="openConfirmModal(p)" ng-if="p.status.code==='TrafficConfirm' && userRole===p.status.role">确认到货</a>
                             <a href="javascript:void(0)" ng-click="openInputModal(p)" ng-if="p.status.code==='WaitForInbound' && userRole===p.status.role">入库</a>
                             <a href="javascript:void(0)" ng-click="openPayModal(p)" ng-if="userRole===p.status.role && p.status.code === 'WaitForTrafficFeePayed'">打款</a>
+                            <a href="javascript:void(0)" class="fa fa-trash-o text-red" ng-click=""
+                               ng-if="userRole==='admin' && p.status.code === 'TrafficConfirm'" title="确定删除？"></a>
                         </td>
                     </tr>
                     </tbody>

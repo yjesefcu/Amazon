@@ -80,6 +80,7 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 order = PurchasingOrder.objects.create(**data)
                 count = 0
                 total_price = 0
+                sku_list = list()
                 for d in items:
                     product_id = d.get('product').get("id")
                     price = int(d.get('count')) * float(d.get('price'))
@@ -93,8 +94,15 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     poi = PurchasingOrderItems.objects.create(**d)
                     count += to_int(poi.count)
                     total_price += poi.total_price
+                    sku_list.append(poi.SellerSKU)
+                    # 更新商品的采购数量
+                    product = poi.product
+                    add_int(product, 'purchasing_count', poi.count)
+                    product.save()
+                    # end
                 order.count = count
                 order.total_price = total_price
+                order.skus = ';'.join(sku_list)
                 order.save()
                 # 如果编辑的话，需要删除老的采购单信息
                 if exist_order_id:
@@ -103,6 +111,21 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
             raise IntegrityError(ex)
         headers = self.get_success_headers(self.get_serializer(order).data)
         return Response(self.get_serializer(order).data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # 删除订单前需要更新商品的总采购数量
+        items = instance.items.all()
+        try:
+            with transaction.atomic():
+                for item in items:
+                    product = item.product
+                    product.purchasing_count = product.purchasing_count - item.count if product.purchasing_count else 0
+                    product.save()
+                self.perform_destroy(instance)
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -162,6 +185,9 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
 
 
 class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
+    """
+    发货记录
+    """
     queryset = TrackingOrder.objects.all().order_by('-id')
     serializer_class = TrackingOrderSerializer
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
@@ -185,14 +211,14 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 price_diff = 0      # 商品价格差异
                 for item in items:
                     product = Product.objects.get(pk=item['product']['id'])
+                    pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
+                    old_price = pitem.price
                     price = to_float(item.get('price'))
                     titem = TrackingOrderItems.objects.create(purchasing_order=purchasing_order, traffic_order=inbound, shipping_date=today,
                                                       product=product, expect_count=item.get('expect_count'), price=price,
-                                                              total_price=price * int(item.get('expect_count')))
+                                                              total_price=price * int(item.get('expect_count')), old_price=old_price)
                     count += int(item['expect_count'])
                     # 更新每一个商品的发货数量
-                    pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
-                    old_price = pitem.price
                     pitem.price = price # 更新单价
                     if old_price != price:
                         # 由于单价修改是对剩下的所有未发货商品都生效，因此将商品差价 * 剩余未发货的数量
@@ -205,6 +231,9 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     else:
                         pitem.expect_count = to_int(titem.expect_count)
                     pitem.save()
+                    # 更新product的总的expect_count
+                    add_int(product, 'purchasing_expect_count', titem.expect_count)
+                    product.save()
                 inbound.expect_count = count
                 inbound.save()
                 if price_diff:
@@ -215,13 +244,51 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     purchasing_order.expect_count += count
                 else:
                     purchasing_order.expect_count = count
-                add_float(purchasing_order, 'final_payment', data.get('final_payment'))
+                # add_float(purchasing_order, 'final_payment', data.get('final_payment'))
                 purchasing_order.status_id = status_id
                 purchasing_order.save()
         except IntegrityError, ex:
             raise IntegrityError(ex)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def destroy(self, request, *args, **kwargs):
+        # 删除发货记录，需要product的采购数量、在途数量。
+        # 如果发货时修改了商品单价，还需要还原商品单价，还需要更新采购单的商品总价
+        instance = self.get_object()
+        items = instance.items.all()
+        try:
+            purchasing_order = instance.purchasing_order
+            total_expect_count = 0
+            price_diff = 0
+            with transaction.atomic():
+                for item in items:
+                    product = item.product
+                    # 更新采购单商品的预计发货数量
+                    pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
+                    if item.price != item.old_price:
+                        # 如果单价不等，说明这次发货修改了商品单价，需要修改商品的总价
+                        diff = (item.price - item.old_price) * (pitem.count - pitem.expect_count + item.expect_count)
+                        pitem.total_price -= diff       # 将商品总价加上差价
+                        price_diff += diff
+                        pitem.price = item.old_price
+
+                    pitem.expect_count -= item.expect_count
+                    pitem.save()
+                    # 更新商品自身的预计发货数量
+                    product.purchasing_expect_count -= item.expect_count
+                    product.save()
+                    #
+                    total_expect_count += item.expect_count
+            # 更新总订单的数量和状态
+            purchasing_order.expect_count -= total_expect_count
+            purchasing_order.total_price -= price_diff
+            purchasing_order.status_id = OrderStatus.WaitForTraffic
+            purchasing_order.save()
+        except IntegrityError, ex:
+            raise IntegrityError(ex)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['post'])
     def received(self, request, pk, **kwargs):
@@ -332,4 +399,8 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         add_int(product, 'domestic_inventory', count)       # 增加库存
         product.supply_cost = total / product.domestic_inventory
         product.cost = product.supply_cost + to_float(product.shipment_cost)
+
+        # 商品入库后，需要更新product的采购数量和在途数量
+        add_int(product, 'purchasing_count', -item.received_count)
+        add_int(product, 'purchasing_expect_count', -item.received_count)
         product.save()

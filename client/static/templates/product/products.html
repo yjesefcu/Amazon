@@ -26,6 +26,8 @@
                                 <th>图片</th>
                                 <th>描述</th>
                                 <th>赠品</th>
+                                <th>采购在途</th>
+                                <th>待入库</th>
                                 <th>国内库存</th>
                                 <th>国内成本<br>({{ currency }})</th>
                                 <th>亚马逊库存</th>
@@ -37,9 +39,11 @@
                                 <td><input type="checkbox" ng-model="p.selected"></td>
                                 <td>{{ $index + 1 }}</td>
                                 <td><a ui-sref="index.productDetail({productId: p.id})">{{ p.SellerSKU }}</a></td>
-                                <td><img src="{{ host }}{{ p.Image }}"></td>
+                                <td><img src="{{ host }}{{ p.Image }}" style="max-width: 36px;max-height: 36px;"></td>
                                 <td style="max-width: 100px;">{{ p.TitleCn }}</td>
                                 <td><span ng-repeat="g in p.gifts">{{ g.SellerSKU }};</span> </td>
+                                <td>{{ p.purchasing_count }}</td>
+                                <td>{{ p.purchasing_expect_count }}</td>
                                 <td>{{ p.domestic_inventory }}</td>
                                 <td>{{ p.supply_cost }}</td>
                                 <td>{{ p.amazon_inventory }}</td>

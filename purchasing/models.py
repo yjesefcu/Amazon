@@ -40,6 +40,7 @@ class PurchasingOrder(models.Model):
     contact_phone = models.CharField(max_length=50, null=True, blank=True)
     traffic_comment = models.CharField(max_length=255, null=True, blank=True)   # 物流说明
     operator = models.CharField(max_length=100, null=True, blank=True)          # 经办人
+    skus = models.CharField(max_length=255, null=True, blank=True)              # sku列表
 
     # 订单信息
     creator = models.ForeignKey(User, null=True, blank=True)                   # 采购单创建人
@@ -122,6 +123,7 @@ class TrackingOrderItems(models.Model):
     expect_count = models.IntegerField(null=True, blank=True)       # 发货数量
     received_count = models.IntegerField(null=True, blank=True, default=0)    # 实际到货数据
     damage_count = models.IntegerField(null=True, blank=True, default=0)    # 损坏数量
+    old_price = models.FloatField(null=True, blank=True)      # 修改前的单价
 
 
 class PaymentRecord(models.Model):
