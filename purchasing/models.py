@@ -35,7 +35,7 @@ class PurchasingOrder(models.Model):
     parent = models.ForeignKey('self', null=True, blank=True, related_name='children')       # 如果parent不为空，说明是子采购单
     # 采购单合同
     contract_number = models.CharField(max_length=100)    # 合同号
-    supplier = models.CharField(max_length=255)           # 供应商
+    supplier = models.CharField(max_length=255, null=True, blank=True)           # 供应商
     contact_person = models.CharField(max_length=50, null=True, blank=True)     # 联系人
     contact_phone = models.CharField(max_length=50, null=True, blank=True)
     traffic_comment = models.CharField(max_length=255, null=True, blank=True)   # 物流说明
