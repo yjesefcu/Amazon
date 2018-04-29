@@ -36,8 +36,13 @@ def get_or_create_product(MarketplaceId, SellerSKU):
     try:
         product = Product.objects.get(MarketplaceId=MarketplaceId, SellserSKU=SellerSKU)
     except Product.DoesNotExist, ex:
-        Product.objects.get_or_create(MarketplaceId="public", SellerSKU=SellerSKU)
-        product, created = Product.objects.get_or_create(MarketplaceId=MarketplaceId, SellerSKU=SellerSKU)
+        public_product, created = Product.objects.get_or_create(MarketplaceId="public", SellerSKU=SellerSKU)
+        if created:
+            product = Product.objects.create(MarketplaceId=MarketplaceId, SellerSKU=SellerSKU)
+        else:
+            # 复制一份
+            product = _copy_product(public_product)
+            product.save()
     return product
 
 
@@ -93,14 +98,17 @@ def update_product_to_db(product_data):
     """
     try:
         public_product = Product.objects.get(MarketplaceId="public", SellerSKU=product_data['SellerSKU'])
-        product = get_or_create_product(MarketplaceId=product_data['MarketplaceId'],
-                                                         SellerSKU=product_data['SellerSKU'])
+        # 同步更新到所有市场商品中
+        market_products = Product.objects.filter(SellerSKU=public_product.SellerSKU).exclude(MarketplaceId='public')
         for key, value in product_data.items():
             setattr(public_product, key, value)
-            setattr(product, key, value)
+            for p in market_products:
+                setattr(p, key, value)
         # 计算体积重
         public_product.volume_weight = float(public_product.package_width) * float(public_product.package_height) \
                                 * float(public_product.package_length) / 5000
+        for p in market_products:
+            setattr(p, 'volume_weight', public_product.volume_weight)
         public_product.save()
         if not public_product.Image:
             # 下载image到本地
@@ -109,10 +117,11 @@ def update_product_to_db(product_data):
                 product_data['Image'] = image
                 public_product.Image = image
                 public_product.save()
+                for p in market_products:
+                    setattr(p, 'Image', image)
         # 同步到市场商品中
-        product.volume_weight = public_product.volume_weight
-        product.Image = public_product.Image
-        product.save()
+        for p in market_products:
+            p.save()
 
     except BaseException, ex:
         traceback.format_exc()

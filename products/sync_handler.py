@@ -21,7 +21,7 @@ def update_product(market=None):
     """
     market_id = market.MarketplaceId if market else 'ATVPDKIKX0DER'
     # 创建商品时，需要创建两份，一个是公共商品，一个是该账号对应的商品
-    products = Product.objects.filter(MarketplaceId=market_id, ASIN__isnull=True)
+    products = Product.objects.filter(MarketplaceId='public', ASIN__isnull=True)
     # 5个一组
     length = 5
     for group in [products[i:i+length] for i in xrange(0, len(products), length)]:

@@ -13,7 +13,7 @@ from rest_framework.decorators import detail_route, list_route
 from django_filters.rest_framework import DjangoFilterBackend
 from purchasing.models import OrderStatus
 from amazon_services.api import get_exchange_rate
-from products.api import get_public_product
+from products.api import get_public_product, get_or_create_product
 from models import *
 from serializer import *
 
@@ -250,7 +250,7 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
 
     def _update_to_market_product(self, MarketplaceId, public_product, count, shipment_cost):
         # 将成本从公共商品同步到市场商品
-        product, created = Product.objects.get_or_create(MarketplaceId=MarketplaceId, SellerSKU=public_product.SellerSKU)
+        product = get_or_create_product(MarketplaceId, public_product.SellerSKU)
         # 新的国内成本
         supply_cost = product.supply_cost
         new_domestic_inventory = to_int(product.domestic_inventory) + count

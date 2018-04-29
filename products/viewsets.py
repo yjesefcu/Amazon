@@ -224,11 +224,23 @@ class ProductViewSet(NestedViewSetMixin, ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
+        data = request.data
         for field in request.data:
-            setattr(instance, field, request.data.get(field))
+            setattr(instance, field, data.get(field))
         instance.save()
+
+        # 同时更新市场商品
+        market_products = Product.objects.filter(SellerSKU=instance.SellerSKU).exclude(MarketplaceId='public')
+        fields = ['SellerSKU', 'ASIN', 'FNSKU', 'Brand', 'Color', 'Image', 'Title', 'TitleCn', 'ProductGroup',
+                  'width', 'height', 'length', 'weight', 'package_width', 'package_height', 'package_length', 'package_weight',
+                  'volume_weight', 'gifts']
+        for field in fields:
+            if field in data:
+                for p in market_products:
+                    setattr(p, field, data.get(field))
+        for p in market_products:
+            p.save()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
