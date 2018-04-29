@@ -211,7 +211,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 count = 0
                 price_diff = 0      # 商品价格差异
                 for item in items:
-                    product = get_public_product(pk=item['product']['id'])
+                    product = Product.objects.get(pk=item['product']['id'])
                     pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
                     old_price = pitem.price
                     price = to_float(item.get('price'))
@@ -352,6 +352,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
 
                 # 更新采购订单的收货数量和损坏数量
                 add_int(purchasing_order, 'received_count', received_count)
+                add_int(purchasing_order, 'expect_count', -received_count)
                 add_int(purchasing_order, 'damage_count', damage_count)
                 add_float(purchasing_order, 'traffic_fee', data.get('traffic_fee'))
                 purchasing_order.status_id = OrderStatus.WaitForCheck
@@ -392,9 +393,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
         count = int(item.received_count) - to_int(item.damage_count)   # 需要减去损坏数量
         # 找出商品单价
         # poi = PurchasingOrderItems.objects.get(order_id=item.purchasing_order_id, product=product)
-        new_cost = (item.total_price + to_float(item.traffic_fee)) / float(count)      # 由于支付尾款时是按总数量支付的，因此损坏的数量也要算上去
-        # 需要处以汇率
-        new_cost = new_cost / get_exchange_rate()
+        new_cost = (item.total_price + to_float(item.traffic_fee))      # 由于支付尾款时是按总数量支付的，因此损坏的数量也要算上去
         # 更新商品当前国内总成本
         total = to_float(product.supply_cost) * to_int(product.domestic_inventory) + new_cost
         add_int(product, 'domestic_inventory', count)       # 增加库存

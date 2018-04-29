@@ -29,8 +29,8 @@
                                 <th>采购在途</th>
                                 <th>待入库</th>
                                 <th>国内库存</th>
-                                <th>国内成本<br>({{ currency }})</th>
-                                <th>亚马逊库存</th>
+                                <th>国内成本<br>(元)</th>
+                                <th>移库成本<br>(元)</th>
                                 <!--<th>操作</th>-->
                             </tr>
                         </thead>
@@ -46,7 +46,7 @@
                                 <td>{{ p.purchasing_expect_count }}</td>
                                 <td>{{ p.domestic_inventory }}</td>
                                 <td>{{ p.supply_cost }}</td>
-                                <td>{{ p.amazon_inventory }}</td>
+                                <td>{{ p.shipment_cost }}</td>
                                 <!--<td>-->
                                     <!--<a title="添加入库货件（至上海）" ng-click="openSupplyModal(p.id);"><i class="fa fa-plus"></i></a>-->
                                 <!--</td>-->

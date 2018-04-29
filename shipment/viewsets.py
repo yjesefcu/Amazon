@@ -77,7 +77,7 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
                     ShipmentOrderItem.objects.create(order=order, product=product, SellerSKU=item_data.get('SellerSKU'), count=item_data.get('count'))
                     count += int(item_data.get('count'))
                     # 增加商品的移库数量
-                    product.shipment_count = to_int(product.shipment_count) + to_int(items_data.get('count'))
+                    product.shipment_count = to_int(product.shipment_count) + to_int(item_data.get('count'))
                     product.save()
                 order.count = count
                 order.product_count = len(items_data)
@@ -91,6 +91,17 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
         except IntegrityError, ex:
             raise IntegrityError(ex)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def destroy(self, request, *args, **kwargs):
+        # 删除移库单
+        instance = self.get_object()
+        items = instance.items.all()
+        for item in items:
+            public_product = item.product
+            add_int(public_product, 'shipment_count', -item.count)
+            public_product.save()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
         order = self.get_object()
@@ -225,13 +236,14 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
             if order.tax_fee:
                 item.tax_fee = ratio * order.tax_fee
             item.save()
+        market = MarketAccount.objects.get(MarketplaceId=order.MarketplaceId)
         for item in items:      # 更新商品单位成本
-            self._update_product_unit_cost(order.MarketplaceId, item)        # 更新商品的单位成本
+            self._update_product_unit_cost(market, item)        # 更新商品的单位成本
 
-    def _update_product_unit_cost(self, MarketplaceId, item):
+    def _update_product_unit_cost(self, market, item):
         # 更新商品的单位成本和库存
         product = item.product
-        new_cost = (to_float(item.traffic_fee) + to_float(item.tax_fee)) / get_exchange_rate()        # 需要除以汇率
+        new_cost = (to_float(item.traffic_fee) + to_float(item.tax_fee))      # 需要除以汇率
         total_cost = to_int(product.amazon_inventory) * to_float(product.shipment_cost) + new_cost
         count = to_int(product.amazon_inventory) + item.boxed_count
         product.amazon_inventory = count
@@ -246,18 +258,23 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
         add_int(product, 'shipment_count', -item.boxed_count)
         add_int(product, 'domestic_inventory', -item.boxed_count)
         product.save()
-        self._update_to_market_product(MarketplaceId, product, item.boxed_count, new_cost)
+        self._update_to_market_product(market, product, item.boxed_count, new_cost)
 
-    def _update_to_market_product(self, MarketplaceId, public_product, count, shipment_cost):
+    def _update_to_market_product(self, market, public_product, count, shipment_cost):
         # 将成本从公共商品同步到市场商品
-        product = get_or_create_product(MarketplaceId, public_product.SellerSKU)
+        product = get_or_create_product(market.MarketplaceId, public_product.SellerSKU)
         # 新的国内成本
-        supply_cost = product.supply_cost
         new_domestic_inventory = to_int(product.domestic_inventory) + count
-        new_supply_cost = ((to_float(public_product.supply_cost) * count) + to_float(product.supply_cost)) / new_domestic_inventory
+        # public 成本是人民币，市场商品是除以汇率后的金额
+        old_supply_total = to_float(product.supply_cost) * to_int(product.domestic_inventory)       # 汇率后
+        new_supply_total = to_float(public_product.supply_cost) * count / market.exchange_rate
+        new_supply_cost = (new_supply_total + old_supply_total) / new_domestic_inventory
         # 新的移库成本
         new_amazon_inventory = to_int(product.amazon_inventory) + count
-        new_amazon_cost = (to_float(product.supply_cost) * to_int(product.amazon_inventory) + shipment_cost) / new_amazon_inventory
+        old_shipment_total = to_float(product.shipment_cost) * to_int(product.amazon_inventory)     # 之前的成本*数量
+        new_shipment_total = shipment_cost / market.exchange_rate       # 新的话费，需要除以汇率
+        new_amazon_cost = (old_shipment_total + new_shipment_total) / new_amazon_inventory
+
         product.supply_cost = new_supply_cost
         product.domestic_inventory = new_domestic_inventory
         product.shipment_cost = new_amazon_cost

@@ -44,14 +44,9 @@ def image_upload(request):
 
 def sync_orders(request):
     from sync_handler import update_all
-    products = Product.objects.filter(MarketplaceId="ATVPDKIKX0DER")
-    products.delete()
-    # public_products = []
-    # for p in products:
-    #     p.id = None
-    #     p.MarketplaceId = "public"
-    #     public_products.append(p)
-    # Product.objects.bulk_create(public_products)
+    market = MarketAccount.objects.get(MarketplaceId='ATVPDKIKX0DER')
+    update_all(market)
+
 
 
 def _init_refund_orders():

@@ -36,7 +36,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="os in shipments"table-repeat-directive>
+                        <tr ng-repeat="os in shipments" shipment-order-repeat-directive>
                             <td><a ui-sref="index.shipmentDetail({id: os.id})">{{ $index + 1 }}</a></td>
                             <td>{{ os.code }}</td>
                             <td>{{ os.create_time }}</td>
@@ -50,6 +50,7 @@
                                 <a class="fa fa-pencil" title="编辑" ng-if="userRole === 'operator' && os.status.code==='WaitForPack'"
                                    ui-sref="index.createShipment({id: os.id})"></a>
                                 <a ng-if="os.canEdit"ui-sref="index.shipmentDetail({id: os.id})">处理</a>
+                                <a ng-if="userRole==='admin' && os.status.code === 'WaitForPack'" class="fa fa-trash-o text-red" title="删除"></a>
                             </td>
                         </tr>
                         </tbody>

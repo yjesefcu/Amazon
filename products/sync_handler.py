@@ -174,6 +174,7 @@ def update_all(market):
     except BaseException, ex:
         exception = True
         logger.error(traceback.format_exc())
+        traceback.format_exc()
     if exception:
         market.sync_report_status = 1
     market.save()

@@ -37,7 +37,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
     }
 
     function getProducts () {
-        $http.get("/api/products?MarketplaceId=" + $rootScope.MarketplaceId).then(function (result) {
+        $http.get("/api/products?MarketplaceId=" + $rootScope.publicMarketplaceId).then(function (result) {
             $scope.products = result.data;
         });
     }
@@ -115,6 +115,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
             $scope.itemError = '至少选择一个商品';
             return;
         }
+        $scope.order.MarketplaceId = $rootScope.publicMarketplaceId;
         $scope.order.items = items;
         $http.post('/api/purchasing/', $scope.order).then(function (result) {
             $state.go('index.purchasingDetail', {orderId: result.data.id});

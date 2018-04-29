@@ -21,7 +21,7 @@ def get_public_product(SellerSKU):
     return product
 
 
-def get_or_create_product(MarketplaceId, SellerSKU):
+def get_or_create_product(MarketplaceId=None, SellerSKU=None):
 
     def _copy_product(pp):
         new_p = Product()
@@ -34,7 +34,7 @@ def get_or_create_product(MarketplaceId, SellerSKU):
         return new_p
 
     try:
-        product = Product.objects.get(MarketplaceId=MarketplaceId, SellserSKU=SellerSKU)
+        product = Product.objects.get(MarketplaceId=MarketplaceId, SellerSKU=SellerSKU)
     except Product.DoesNotExist, ex:
         public_product, created = Product.objects.get_or_create(MarketplaceId="public", SellerSKU=SellerSKU)
         if created:
@@ -99,7 +99,11 @@ def update_product_to_db(product_data):
     try:
         public_product = Product.objects.get(MarketplaceId="public", SellerSKU=product_data['SellerSKU'])
         # 同步更新到所有市场商品中
+        if 'MarketplaceId' in product_data:
+            del product_data['MarketplaceId']
         market_products = Product.objects.filter(SellerSKU=public_product.SellerSKU).exclude(MarketplaceId='public')
+        image = product_data.get('Image')
+        del product_data['Image']
         for key, value in product_data.items():
             setattr(public_product, key, value)
             for p in market_products:
@@ -109,16 +113,19 @@ def update_product_to_db(product_data):
                                 * float(public_product.package_length) / 5000
         for p in market_products:
             setattr(p, 'volume_weight', public_product.volume_weight)
-        public_product.save()
         if not public_product.Image:
             # 下载image到本地
-            image = download_image(product_data['Image'])
-            if image:
-                product_data['Image'] = image
+            try:
+                downloaded = download_image(image)
+                if downloaded:
+                    product_data['Image'] = downloaded
+                    public_product.Image = downloaded
+                    public_product.save()
+                    for p in market_products:
+                        setattr(p, 'Image', downloaded)
+            except BaseException, ex:
                 public_product.Image = image
-                public_product.save()
-                for p in market_products:
-                    setattr(p, 'Image', image)
+        public_product.save()
         # 同步到市场商品中
         for p in market_products:
             p.save()
@@ -782,7 +789,7 @@ class SettlementIncomeCalc(object):
         self.settlement.save()
 
     def calc_all_products(self):
-        products = Product.objects.all()
+        products = Product.objects.filter(MarketplaceId=self.settlement.MarketplaceId)
         for p in products:
             calc_obj = ProductIncomeCalc(p)
             calc_obj.calc_income(self.settlement)

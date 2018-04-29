@@ -7,7 +7,7 @@ app.controller('ProductCtrl', function($scope, $http, $rootScope, $uibModal, $lo
     $scope.selectedProducts = {};
     $http.get(serviceFactory.getAllProducts(), {
         params: {
-            MarketplaceId: $rootScope.MarketplaceId,
+            MarketplaceId: $rootScope.publicMarketplaceId,
             dataType: "json"
         }
     }).then(function (result) {
@@ -61,7 +61,7 @@ app.controller('ProductCtrl', function($scope, $http, $rootScope, $uibModal, $lo
 app.controller('supplyModalCtrl', function($scope, $rootScope, $http, serviceFactory, $uibModalInstance, data) {
     $scope.productId = data.id;
     var callback = data.cb;
-    $scope.supply = {product: data.id, MarketplaceId: $rootScope.MarketplaceId};
+    $scope.supply = {product: data.id, MarketplaceId: $rootScope.publicMarketplaceId};
     //在这里处理要进行的操作
     $scope.save = function() {
         $scope.supply['inventory'] = $scope.supply['count'];       // 设置剩余数量与总数量一致
@@ -110,7 +110,7 @@ app.directive('tableRepeatDirective', function($timeout) {
 });
 
 app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location, $state, $timeout, $uibModal, $stateParams, serviceFactory, atomicNotifyService) {
-    $scope.formData = {'MarketplaceId': $rootScope.MarketplaceId};
+    $scope.formData = {'MarketplaceId': $rootScope.publicMarketplaceId};
     $scope.productIcon = '';
     $scope.thumb = {};
     $scope.gifts = [];  // 赠品
@@ -317,7 +317,7 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
     // 商品搜索
     $scope.products = [];
     function getProducts () {
-        $http.get("/api/products?MarketplaceId=" + $rootScope.MarketplaceId).then(function (result) {
+        $http.get("/api/products?MarketplaceId=public").then(function (result) {
             $scope.products = result.data;
         });
     }

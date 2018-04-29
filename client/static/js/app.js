@@ -7,7 +7,8 @@ var app = angular.module('myApp', ['ui.router', 'atomic-notify', 'ui.bootstrap',
 
 app.controller('MainCtrl', function ($scope, $state, $http, $rootScope, $location, serviceFactory) {
     $rootScope.currentMarket = {'country': '公共'};
-    $rootScope.MarketplaceId = 'public' ;
+    $rootScope.publicMarketplaceId = 'public';
+    $rootScope.MarketplaceId = 'ATVPDKIKX0DER' ;
     $rootScope.alerts = [];
     $rootScope.markets = [];
     $rootScope.currentcy = 'USD';

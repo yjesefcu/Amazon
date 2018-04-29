@@ -73,6 +73,11 @@ class SettlementSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     supply_cost = FloatRoundField(read_only=True)
+    shipment_cost = FloatRoundField(read_only=True)
+    package_width = FloatRoundField(read_only=True)
+    package_height = FloatRoundField(read_only=True)
+    package_length = FloatRoundField(read_only=True)
+    package_weight = FloatRoundField(read_only=True)
 
     class Meta:
         model = Product
@@ -80,8 +85,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductWithGigftsSeriazlier(serializers.ModelSerializer):
-
+    supply_cost = FloatRoundField(read_only=True)
+    shipment_cost = FloatRoundField(read_only=True)
     gifts = ProductSerializer(source='get_gifts', many=True)
+    package_width = FloatRoundField(read_only=True)
+    package_height = FloatRoundField(read_only=True)
+    package_length = FloatRoundField(read_only=True)
+    package_weight = FloatRoundField(read_only=True)
 
     class Meta:
         model= Product

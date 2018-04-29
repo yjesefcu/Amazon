@@ -1,10 +1,32 @@
 "use strict";
 
-app.controller('ShipmentCtrl', function ($scope, $http, $rootScope, serviceFactory) {
+
+app.directive('shipmentOrderRepeatDirective', function($timeout) {
+    return function(scope, element, attrs) {
+        if (scope.$last){   // 表格repeat完毕
+            $timeout(function(){
+                if (angular.element(element.parent().parent())[0].nodeName == 'TABLE'){
+                    angular.element(element.parent().parent())
+                        .DataTable({
+                        "paging": true,
+                        "lengthChange": true,
+                        "searching": true,
+                        "ordering": false,
+                        "info": true,
+                        "autoWidth": false
+                    });
+                }
+            }, 1000);
+            scope.initDeleteConfirm();
+        }
+    };
+});
+
+app.controller('ShipmentCtrl', function ($scope, $http, $rootScope, $timeout, serviceFactory) {
     $scope.shipments = [];
     $http.get('/api/shipments', {
         params: {
-            MarketplaceId: $rootScope.MarketplaceId
+            MarketplaceId: $rootScope.publicMarketplaceId
         }
     }).then(function (result) {
         sortOrders(result.data);
@@ -37,13 +59,44 @@ app.controller('ShipmentCtrl', function ($scope, $http, $rootScope, serviceFacto
                 }
                 $rootScope.addAlert('error', '修改失败');
             });
+    };
+
+    $scope.initDeleteConfirm = function () {
+        $timeout(function () {
+
+        $('#overseaTable .fa-trash-o').each(function (i, n) {
+            $(this).confirmation({
+                animation: true,
+                placement: "bottom",
+                title: "确定删除？",
+                btnOkClass: 'text-red',
+                href: 'javascript:void(0)',
+                btnCancelClass: '',
+                btnOkLabel: '是',
+                btnCancelLabel: '否',
+                onConfirm: function () {
+                    var index = i;
+                    deleteOrder(index);
+                }
+            });
+        });
+        }, 1000);
+    };
+
+    function deleteOrder(index) {
+        $http.delete('/api/shipments/' + $scope.shipments[index].id).then(function (result) {
+            $rootScope.addAlert('info', '删除成功');
+            $scope.shipments.splice(index, 1);
+        }).catch(function (result) {
+            $rootScope.addAlert('error', '删除失败');
+        })
     }
 });
 
 app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $stateParams, $state, $timeout, $uibModal, serviceFactory) {
     var id = $stateParams.id;
     $scope.createBy = $stateParams.by;
-    $scope.formData = {MarketplaceId: $rootScope.MarketplaceId};
+    $scope.formData = {MarketplaceId: $rootScope.publicMarketplaceId};
     $scope.items = [];
     $scope.error_msg = '';
     $scope.volume_args_choice = [5000, 6000];
@@ -331,7 +384,7 @@ app.controller('OutboundEditCtrl', function ($scope, $http, $rootScope, $statePa
 
 app.controller('ShipmentCreateCtrl', function ($scope, $http, $rootScope, $stateParams, $state, $timeout, serviceFactory) {
     $scope.id = $stateParams.id;
-    $scope.formData = {MarketplaceId: $rootScope.MarketplaceId};
+    $scope.formData = {MarketplaceId: $rootScope.publicMarketplaceId};
     $scope.items = [];
     $scope.error_msg = '';
     $scope.products = [];
