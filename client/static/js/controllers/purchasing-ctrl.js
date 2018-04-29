@@ -37,7 +37,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
     }
 
     function getProducts () {
-        $http.get("/api/products").then(function (result) {
+        $http.get("/api/products?MarketplaceId=" + $rootScope.MarketplaceId).then(function (result) {
             $scope.products = result.data;
         });
     }

@@ -13,6 +13,7 @@ from rest_framework.decorators import detail_route, list_route
 from django_filters.rest_framework import DjangoFilterBackend
 from purchasing.models import OrderStatus
 from amazon_services.api import get_exchange_rate
+from products.api import get_public_product
 from models import *
 from serializer import *
 
@@ -32,6 +33,24 @@ def to_int(v):
     return int(v)
 
 
+def add_int(obj, field, value):
+    if not value:
+        return
+    if getattr(obj, field):
+        setattr(obj, field, getattr(obj, field) + int(value))
+    else:
+        setattr(obj, field, int(value))
+
+
+def add_float(obj, field, value):
+    if not value:
+        return
+    if getattr(obj, field):
+        setattr(obj, field, getattr(obj, field) + to_float(value))
+    else:
+        setattr(obj, field, to_float(value))
+
+
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
@@ -43,7 +62,7 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
     serializer_class = ShipmentOrderSerializer
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('MarketplaceId',)
+    # filter_fields = ('MarketplaceId',)
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -54,9 +73,12 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 order = ShipmentOrder.objects.create(create_time=datetime.datetime.now().replace(tzinfo=TZ_ASIA), **data)
                 count = 0
                 for item_data in items_data:
-                    product = Product.objects.get(SellerSKU=item_data.get('SellerSKU'))
+                    product = get_public_product(item_data.get('SellerSKU'))
                     ShipmentOrderItem.objects.create(order=order, product=product, SellerSKU=item_data.get('SellerSKU'), count=item_data.get('count'))
                     count += int(item_data.get('count'))
+                    # 增加商品的移库数量
+                    product.shipment_count = to_int(product.shipment_count) + to_int(items_data.get('count'))
+                    product.save()
                 order.count = count
                 order.product_count = len(items_data)
                 order.status_id = OrderStatus.WaitForPack
@@ -134,8 +156,6 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 serializer.is_valid(raise_exception=True)
                 self.perform_update(serializer)
 
-                # 更新商品的国内库存
-                self._update_product_inventory(items)
         except IntegrityError, ex:
             raise IntegrityError(ex)
         # order.save()
@@ -143,15 +163,9 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
 
-    def _update_product_inventory(self, items):
-        # 更新商品库存
-        for item in items:
-            product = item.product
-            product.domestic_inventory = to_int(product.domestic_inventory) - item.boxed_count
-            product.save()
-
     @detail_route(methods=['patch'])
     def close(self, request, pk):
+        # 关闭移库单
         order = self.get_object()
         try:
             with transaction.atomic():
@@ -212,9 +226,9 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 item.tax_fee = ratio * order.tax_fee
             item.save()
         for item in items:      # 更新商品单位成本
-            self._update_product_unit_cost(item)        # 更新商品的单位成本
+            self._update_product_unit_cost(order.MarketplaceId, item)        # 更新商品的单位成本
 
-    def _update_product_unit_cost(self, item):
+    def _update_product_unit_cost(self, MarketplaceId, item):
         # 更新商品的单位成本和库存
         product = item.product
         new_cost = (to_float(item.traffic_fee) + to_float(item.tax_fee)) / get_exchange_rate()        # 需要除以汇率
@@ -228,8 +242,28 @@ class ShipmentOrderViewSet(NestedViewSetMixin, ModelViewSet):
             product.shipment_cost = total_cost
         # 总的平均成本
         product.cost = product.shipment_cost + to_float(product.supply_cost)
+        # 从商品的移库数量中减去
+        add_int(product, 'shipment_count', -item.boxed_count)
+        add_int(product, 'domestic_inventory', -item.boxed_count)
         product.save()
+        self._update_to_market_product(MarketplaceId, product, item.boxed_count, new_cost)
 
+    def _update_to_market_product(self, MarketplaceId, public_product, count, shipment_cost):
+        # 将成本从公共商品同步到市场商品
+        product, created = Product.objects.get_or_create(MarketplaceId=MarketplaceId, SellerSKU=public_product.SellerSKU)
+        # 新的国内成本
+        supply_cost = product.supply_cost
+        new_domestic_inventory = to_int(product.domestic_inventory) + count
+        new_supply_cost = ((to_float(public_product.supply_cost) * count) + to_float(product.supply_cost)) / new_domestic_inventory
+        # 新的移库成本
+        new_amazon_inventory = to_int(product.amazon_inventory) + count
+        new_amazon_cost = (to_float(product.supply_cost) * to_int(product.amazon_inventory) + shipment_cost) / new_amazon_inventory
+        product.supply_cost = new_supply_cost
+        product.domestic_inventory = new_domestic_inventory
+        product.shipment_cost = new_amazon_cost
+        product.amazon_inventory = new_amazon_inventory
+        product.cost = product.supply_cost + product.shipment_cost
+        product.save()
 
 class ShipmentOrderItemViewSet(NestedViewSetMixin, ModelViewSet):
     queryset = ShipmentOrderItem.objects.all().order_by('-id')

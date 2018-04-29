@@ -337,6 +337,19 @@ app.controller('ShipmentCreateCtrl', function ($scope, $http, $rootScope, $state
     $scope.products = [];
     $scope.searchResults = [];
     $scope.searchResultsPosition = {};
+    $scope.accounts = [];
+
+    function formatAccount() {
+        $http.get('/api/markets').then(function (response) {
+            response.data.forEach(function (n, i) {
+                n.account_name = n.country + '-' + n.account;
+                $scope.accounts.push(n);
+            });
+        }).catch(function (exception) {
+            $rootScope.addAlert('danger', '获取账户信息失败：' + exception.message);
+        });
+    }
+    formatAccount();
 
     if ($stateParams.products && $stateParams.products.length) {
         $stateParams.products.forEach(function (p) {
@@ -345,17 +358,12 @@ app.controller('ShipmentCreateCtrl', function ($scope, $http, $rootScope, $state
     }
 
     function getProducts () {
-        $http.get("/api/products").then(function (result) {
+        $http.get("/api/products?MarketplaceId=public").then(function (result) {
             $scope.products = result.data;
         });
     }
 
     function getMarkets() {
-        $http.get('/api/markets').then(function (response) {
-            $scope.markets = response.data;
-        }).catch(function (exception) {
-            $rootScope.addAlert('danger', '获取账户信息失败：' + exception.message);
-        });
     }
     getMarkets();
 

@@ -16,6 +16,31 @@ DT_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 DB_DT_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
+def get_public_product(SellerSKU):
+    product, created = Product.objects.get_or_create(MarketplaceId="public", SellerSKU=SellerSKU)
+    return product
+
+
+def get_or_create_product(MarketplaceId, SellerSKU):
+
+    def _copy_product(pp):
+        new_p = Product()
+        fields = ['SellerSKU', 'ASIN', 'FNSKU', 'Brand', 'Color', 'Image', 'Title', 'TitleCn', 'ProductGroup',
+                  'width', 'height', 'length', 'weight', 'package_width', 'package_height', 'package_length', 'package_weight',
+                  'volume_weight', 'gifts']
+        new_p.MarketplaceId = MarketplaceId
+        for field in fields:
+            setattr(new_p, field, getattr(pp, field))
+        return new_p
+
+    try:
+        product = Product.objects.get(MarketplaceId=MarketplaceId, SellserSKU=SellerSKU)
+    except Product.DoesNotExist, ex:
+        Product.objects.get_or_create(MarketplaceId="public", SellerSKU=SellerSKU)
+        product, created = Product.objects.get_or_create(MarketplaceId=MarketplaceId, SellerSKU=SellerSKU)
+    return product
+
+
 def get_float_from_model(instance, field):
     # 从数据库对象中读取某个字段的浮点值
     if not instance or not hasattr(instance, field):
@@ -67,22 +92,28 @@ def update_product_to_db(product_data):
     """
     """
     try:
-        product, created = Product.objects.get_or_create(MarketplaceId=product_data['MarketplaceId'],
+        public_product = Product.objects.get(MarketplaceId="public", SellerSKU=product_data['SellerSKU'])
+        product = get_or_create_product(MarketplaceId=product_data['MarketplaceId'],
                                                          SellerSKU=product_data['SellerSKU'])
-        # product.ASIN = product_data.get('ASIN')
         for key, value in product_data.items():
+            setattr(public_product, key, value)
             setattr(product, key, value)
         # 计算体积重
-        product.volume_weight = float(product.package_width) * float(product.package_height) \
-                                * float(product.package_length) / 5000
-        product.save()
-        if not product.Image:
+        public_product.volume_weight = float(public_product.package_width) * float(public_product.package_height) \
+                                * float(public_product.package_length) / 5000
+        public_product.save()
+        if not public_product.Image:
             # 下载image到本地
             image = download_image(product_data['Image'])
             if image:
                 product_data['Image'] = image
-                product.Image = image
-                product.save()
+                public_product.Image = image
+                public_product.save()
+        # 同步到市场商品中
+        product.volume_weight = public_product.volume_weight
+        product.Image = public_product.Image
+        product.save()
+
     except BaseException, ex:
         traceback.format_exc()
         raise ex
@@ -250,8 +281,7 @@ class SettlementDbHandler(object):
         data['settlement'] = order.settlement
         data['AmazonOrderId'] = order.AmazonOrderId
         data['PostedDate'] = order.PostedDate
-        product, created = Product.objects.get_or_create(SellerSKU=data['SellerSKU'],
-                                                         MarketplaceId=self.MarketplaceId)
+        product = get_or_create_product(SellerSKU=data['SellerSKU'], MarketplaceId=self.MarketplaceId)
         data['product'] = product
         # data['SellerSKU'] = product.SellerSKU
         # 单价
@@ -282,8 +312,7 @@ class SettlementDbHandler(object):
         data['settlement'] = refund.settlement
         data['refund'] = refund
         data['AmazonOrderId'] = refund.AmazonOrderId
-        product, created = Product.objects.get_or_create(SellerSKU=data['SellerSKU'],
-                                                         MarketplaceId=self.MarketplaceId)
+        product = get_or_create_product(SellerSKU=data['SellerSKU'], MarketplaceId=self.MarketplaceId)
         data['product'] = product
         data['SellerSKU'] = product.SellerSKU
 
@@ -369,7 +398,7 @@ class SettlementDbHandler(object):
         for item in data:
             for field in fields:
                 item[field] = getattr(transaction, field)
-            product, created = Product.objects.get_or_create(MarketplaceId=transaction.MarketplaceId, SellerSKU=item['SellerSKU'])
+            product = get_or_create_product(MarketplaceId=transaction.MarketplaceId, SellerSKU=item['SellerSKU'])
             quantity = int(item.get('Quantity', 0))
             item['UnitPrice'] = get_float(item, 'Amount') / quantity if quantity else 0
             OtherTransactionItem.objects.create(transaction=transaction, settlement=transaction.settlement, product=product, **item)
@@ -461,7 +490,7 @@ class RemovalDbHandler(object):
                 continue
             item['settlement'] = settlement
             item['MarketplaceId'] = settlement.MarketplaceId
-            product, created = Product.objects.get_or_create(SellerSKU=item['SellerSKU'], MarketplaceId=settlement.MarketplaceId)
+            product = get_or_create_product(SellerSKU=item['SellerSKU'], MarketplaceId=settlement.MarketplaceId)
             item['product'] = product
             item['Fee'] = -float(item['Fee'])
             results.append(ProductRemovalItem.objects.create(**item))
@@ -534,7 +563,7 @@ class AdvertisingDbHandler(object):
         tmp = total_fee + settlement.advertising_fee
         tmp_total = 0
         for sku, fee in data_by_sku.items():
-            p, created = Product.objects.get_or_create(SellerSKU=sku, MarketplaceId=settlement.MarketplaceId)
+            p = get_or_create_product(SellerSKU=sku, MarketplaceId=settlement.MarketplaceId)
             obj, created = ProductSettlement.objects.get_or_create(product=p, settlement=settlement)
             obj.advertising_fee = -fee + fee/total_fee*tmp
             tmp_total += obj.advertising_fee
@@ -565,7 +594,7 @@ def update_product_advertising_to_db(settlement, data):
         item['settlement'] = settlement
         item['StartDate'] = _format_datetime(item['StartDate'])
         item['EndDate'] = _format_datetime(item['EndDate'])
-        product, created = Product.objects.get_or_create(MarketplaceId=settlement.MarketplaceId, SellerSKU=item['SellerSKU'])
+        product = get_or_create_product(MarketplaceId=settlement.MarketplaceId, SellerSKU=item['SellerSKU'])
         item['product'] = product
 
         start = datetime.datetime.strptime(item['StartDate'], DB_DT_FORMAT).date()
@@ -1245,7 +1274,7 @@ class SettlementCalc(object):
 
 ##################  退货 ####################
 def update_returns_to_db(settlement, item):
-    product, created = Product.objects.get_or_create(MarketplaceId=settlement.MarketplaceId, SellerSKU=item['SellerSKU'])
+    product = get_or_create_product(MarketplaceId=settlement.MarketplaceId, SellerSKU=item['SellerSKU'])
     ProductReturn.objects.create(settlement=settlement, product=product, **item)
 
 

@@ -251,7 +251,7 @@ class ProductViewSet(NestedViewSetMixin, ModelViewSet):
 
     @list_route(methods=['get'], url_path='gifts')
     def get_all_gifts(self, request):
-        products = Product.objects.filter(gifts__isnull=False)
+        products = Product.objects.filter(MarketplaceId="public", gifts__isnull=False)
         return Response(ProductWithGigftsSeriazlier(products, many=True).data)
 
     @detail_route(methods=['get', 'post'], url_path='gifts')
@@ -267,7 +267,7 @@ class ProductViewSet(NestedViewSetMixin, ModelViewSet):
                 return Response([])
             else:
                 gifts_sku_list = product.gifts.split(',')
-                gifts = Product.objects.filter(SellerSKU__in=gifts_sku_list)
+                gifts = Product.objects.filter(MarketplaceId="public", SellerSKU__in=gifts_sku_list)
                 return Response(self.get_serializer(gifts, many=True).data)
 
 
@@ -280,7 +280,7 @@ class GiftPackingViewSet(NestedViewSetMixin, ModelViewSet):
         items = request.data.get('items')
         now = datetime.datetime.now()
         for item in items:
-            product = Product.objects.get(SellerSKU=item['product'].get('SellerSKU'))
+            product = Product.objects.get(MarketplaceId="public", SellerSKU=item['product'].get('SellerSKU'))
             count = int(item.get('count'))
             GiftPacking.objects.create(product=product, count=count,
                                        create_time=now)
@@ -318,7 +318,7 @@ class SupplyViewSet(NestedViewSetMixin, ModelViewSet):
         instance.save()
         # 更新product的库存
         _query_dict = self.get_parents_query_dict()
-        product = Product.objects.get(pk=_query_dict['product'])
+        product = Product.objects.get(MarketplaceId="public", pk=_query_dict['product'])
         product.domestic_inventory += instance.inventory
         product.save()
 
@@ -506,7 +506,7 @@ class OutboundShipmentViewSet(NestedViewSetMixin, ModelViewSet):
             return []
         items = list()
         for item in data:
-            product = Product.objects.get(SellerSKU=item['SellerSKU'])
+            product = Product.objects.get(MarketplaceId="public", SellerSKU=item['SellerSKU'])
             # 计算体积重
             s, created = OutboundShipmentItem.objects.get_or_create(shipment=shipment, MarketplaceId=shipment.MarketplaceId, product=product)
             # 商品库存信息修改

@@ -15,7 +15,7 @@ class Market(models.Model):
 class MarketAccount(models.Model):
     MarketplaceId = models.CharField(max_length=20, primary_key=True)
     country = models.CharField(max_length=10)   # 国家
-    account_name = models.CharField(max_length=50, null=True, blank=True)   # 账户中文名称
+    account = models.CharField(max_length=50, null=True, blank=True)   # 账户中文名称
     host = models.CharField(max_length=50)
     MWSAuthToken = models.CharField(max_length=15)
     AWSAccessKeyId = models.CharField(max_length=25)

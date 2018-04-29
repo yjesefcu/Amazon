@@ -6,10 +6,10 @@
 var app = angular.module('myApp', ['ui.router', 'atomic-notify', 'ui.bootstrap', '720kb.datepicker']);
 
 app.controller('MainCtrl', function ($scope, $state, $http, $rootScope, $location, serviceFactory) {
-    $rootScope.currentMarket = {'country': '美国'};
-    $rootScope.MarketplaceId = 'ATVPDKIKX0DER' ;
+    $rootScope.currentMarket = {'country': '公共'};
+    $rootScope.MarketplaceId = 'public' ;
     $rootScope.alerts = [];
-    $scope.markets = [];
+    $rootScope.markets = [];
     $rootScope.currentcy = 'USD';
     $scope.currentUrl = $location.$$path;
     $rootScope.addAlert = function (type, msg, timeout) {
@@ -22,19 +22,25 @@ app.controller('MainCtrl', function ($scope, $state, $http, $rootScope, $locatio
             }
         });
     };
+
+    function getAllAccounts() {
+        $http.get('/api/markets').then(function (result) {
+            $rootScope.markets = result.data;
+        });
+    }
     $rootScope.closeAlert = function (index) {
         $rootScope.alerts.splice(index, 1);
     };
 
     $http.get(serviceFactory.markets())
         .then(function (result) {
-             $scope.markets = result.data;
+             $rootScope.markets = result.data;
              $rootScope.currentMarket = result.data[0];
              $rootScope.currency = $rootScope.currentMarket.currency;
         });
 
     $scope.chooseMarket = function (index) {
-        $rootScope.currentMarket = $scope.markets[index];
+        $rootScope.currentMarket = $rootScope.markets[index];
         $rootScope.MarketplaceId = $rootScope.currentMarket.MarketplaceId;
         $rootScope.currency = $rootScope.currentMarket.currency;
         $state.go('index');
@@ -53,6 +59,7 @@ app.controller('MainCtrl', function ($scope, $state, $http, $rootScope, $locatio
         $scope.currentUrl = url;
     };
 
+    getAllAccounts();
     getPermission();
 });
 

@@ -317,7 +317,7 @@ app.controller("ProductEditCtrl", function ($scope, $http, $rootScope, $location
     // 商品搜索
     $scope.products = [];
     function getProducts () {
-        $http.get("/api/products").then(function (result) {
+        $http.get("/api/products?MarketplaceId=" + $rootScope.MarketplaceId).then(function (result) {
             $scope.products = result.data;
         });
     }

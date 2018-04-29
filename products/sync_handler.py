@@ -20,6 +20,7 @@ def update_product(market=None):
     :param market:
     """
     market_id = market.MarketplaceId if market else 'ATVPDKIKX0DER'
+    # 创建商品时，需要创建两份，一个是公共商品，一个是该账号对应的商品
     products = Product.objects.filter(MarketplaceId=market_id, ASIN__isnull=True)
     # 5个一组
     length = 5
@@ -39,30 +40,9 @@ def update_settlement(market=None):
     service = SettlementReportService(market)
     if not market:
         market = MarketAccount()
-        market.MarketplaceId = Marketplace_EN
+        market.MarketplaceId = 'ATVPDKIKX0DER'
     # 检查当前settlement是否已经都同步了
     period_start = market.period_start
-    # end_date_list = list(Settlement.objects.all().values_list('EndDate', flat=True))
-    # count = len(end_date_list)
-    # for i in range(0, count):
-    #     end_date_list[i] = end_date_list[i].date()
-    # all_synced = True
-    # if count:
-    #     if (datetime.date.today() - end_date_list[0]).days >= 14:
-    #         all_synced = False
-    #     else:
-    #         for i in range(1, count):
-    #             if (end_date_list[i-1] - end_date_list[i]).days != 14:
-    #                 all_synced = False
-    #                 break
-    #             if len(end_date_list) == count - 1:
-    #                 if (end_date_list[i] - period_start).days >= 28:
-    #                     all_synced = False
-    # else:
-    #     all_synced = False
-    # if all_synced:
-    #     logger.info('Settlement all synced, return')
-    #     return
     reports = service.get_list()
     report_id_list = list(Settlement.objects.all().values_list('report_id', flat=True))
     if not reports:
@@ -189,17 +169,6 @@ def update_all(market):
     exception = False
     try:
         update_settlement(market)
-
-        # settlements = Settlement.objects.filter(advertising_report_valid=False).order_by('StartDate')
-        # for settlement in settlements:
-        #     try:
-        #         valid = update_advertising_report(market, settlement)
-        #         if valid:
-        #             ProductIncomeCalc().calc_income(settlement)
-        #     except BaseException, ex:
-        #         exception = True
-        #         logger.error('update_advertising eception, settlement: %s ~ %s, exception:%s',
-        #                      settlement.StartDate, settlement.EndDate, traceback.format_exc())
         update_product(market)
         market.sync_report_status = 0
     except BaseException, ex:

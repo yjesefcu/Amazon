@@ -43,6 +43,9 @@ class Product(models.Model):
     purchasing_count = models.IntegerField(null=True, blank=True)   # 采购但未入库的数量
     purchasing_expect_count = models.IntegerField(null=True, blank=True)    # 等待入库的数量
 
+    # 移库
+    shipment_count = models.IntegerField(default=0, null=True, blank=True)  # 移库但未完成的数量
+
     class Meta:
         unique_together = (('MarketplaceId', 'SellerSKU',),)
         ordering = ['SellerSKU']

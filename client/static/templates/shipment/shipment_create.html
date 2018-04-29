@@ -15,10 +15,10 @@
                 <div class="box-body">
                     <div class="col-sm-6">
                         <h4>目的账号：</h4>
-                            <select class="form-control" ng-model="formData.MarketplaceId" ng-options="m.MarketplaceId as m.account_name for m in markets">
-                              </select>
+                        <select class="form-control" ng-model="formData.MarketplaceId" ng-options="m.MarketplaceId as m.account_name for m in accounts">
+                        </select>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <h4>物流公司：</h4>
                         <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
                             <input type="text" class="form-control" placeholder="物流公司名称" ng-model="formData.company" required>
@@ -65,7 +65,7 @@
                                 </td>
                                 <td><img ng-src="{{ p.product.Image }}" ng-if="p.product.Image"></td>
                                 <td style="word-wrap:break-word;width: 250px;">{{ p.product.TitleCn }}</td>
-                                <td>{{ p.product.domestic_inventory }}</td>
+                                <td>{{ p.product.domestic_inventory - p.product.shipment_count }}</td>
                                 <td><input class="lg" ng-model="p.count"></td>
                                 <td><a class="fa fa-trash-o text-red" ng-click="removeItem($index);" title="删除该记录"></a></td>
                             </tr>

@@ -57,7 +57,7 @@ class ShipmentOrderSerializer(serializers.ModelSerializer):
     create_time = DateTimeFormat()
     items = ShipmentOrderItemSerializer(many=True)
     status = OrderStatusSerializer()
-    market = MarketAccountField(source='MarketplaceId')
+    # market = MarketAccountField(source='MarketplaceId')
 
     class Meta:
         model = ShipmentOrder

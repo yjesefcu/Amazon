@@ -14,6 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
 from amazon_services.exception import TextParseException
 from models import *
+from products.api import get_public_product
 from amazon_services.api import get_exchange_rate
 from serializer import *
 
@@ -210,7 +211,7 @@ class TrackingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 count = 0
                 price_diff = 0      # 商品价格差异
                 for item in items:
-                    product = Product.objects.get(pk=item['product']['id'])
+                    product = get_public_product(pk=item['product']['id'])
                     pitem = PurchasingOrderItems.objects.get(product=product, order=purchasing_order)
                     old_price = pitem.price
                     price = to_float(item.get('price'))

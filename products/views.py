@@ -44,33 +44,14 @@ def image_upload(request):
 
 def sync_orders(request):
     from sync_handler import update_all
-    market = MarketAccount.objects.all().first()
-    update_all(market)
-    # from amazon_services.service import SettlementReportService
-    # from api import sum_queryset
-    # for product in Product.objects.all():
-    #     count = int(sum_queryset(InboundShipment.objects.filter(product=product), 'count'))
-    #     product.domestic_inventory = count
-    #     product.amazon_inventory = 0
-    #     product.save()
-    # ProductSettlement.objects.update(advertising_fee=None)
-    return
-
-    # # for item in RefundItem.objects.filter(is_total=False):
-    # #     item.quantity = -item.quantity
-    # #     item.save()
-    # # return
-    # market_place_id = request.GET.get('MarketplaceId')
-    # if not market_place_id:
-    #     market_place_id = 'ATVPDKIKX0DER'
-    # n = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-    # product = Product.objects.get(SellerSKU='MLA000343')
-    # settlement = Settlement.objects.get(pk=1)
-    # #     calc._create_refund_inventory(product)
-    # # ProductProfitCalc(settlement).calc_product_profit(product)
-    # SettlementCalc(settlement).calc_settlement()
-    # from data_export import DataExport
-    # # DataExport(settlement).export()
+    products = Product.objects.filter(MarketplaceId="ATVPDKIKX0DER")
+    products.delete()
+    # public_products = []
+    # for p in products:
+    #     p.id = None
+    #     p.MarketplaceId = "public"
+    #     public_products.append(p)
+    # Product.objects.bulk_create(public_products)
 
 
 def _init_refund_orders():
