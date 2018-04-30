@@ -28,22 +28,34 @@
                                 <span class="text-red" ng-show="orderForm.operator.$invalid">经办人不能为空</span>
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >交货时间<span class="text-red">*</span> </label>
+                                <label>预计出货时间<span class="text-red">*</span> </label>
                                 <div class="datepicker">
                                     <div class="datepicker"
                                          date-format="yyyy-MM-dd"
                                          button-prev='<i class="fa fa-arrow-circle-left"></i>'
                                          button-next='<i class="fa fa-arrow-circle-right"></i>'>
-                                        <input name="expect_date" ng-model="order.expect_date" type="text" placeholder="预计交货日期" class="angular-datepicker-input form-control" required />
+                                        <input name="expect_date" ng-model="order.expect_date" type="text" placeholder="预计出货日期" class="angular-datepicker-input form-control" required />
                                     </div>
                                 </div>
-                                <div class="text-red" ng-show="orderForm.expect_date.$invalid">交货时间不能为空</div>
+                                <div class="text-red" ng-show="orderForm.expect_date.$invalid">预计出货时间不能为空</div>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>补货方式</label>
+                                <select class="form-control">
+                                    <option>正常采购</option>
+                                    <option>急需采购</option>
+                                    <option>补发采购</option>
+                                    <option>返修采购</option>
+                                </select>
                             </div>
                         </div>
                         <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >供应商</label>
-                                <input type="text" class="form-control" placeholder="请输入供应商名称" ng-model="order.supplier">
+                                <label>供应商</label>
+                                <select class="form-control" ng-model="order.supplier" ng-options="s for s in suppliers">
+
+                                </select>
+                                <a href="javascript:void(0)" ng-click="addSupplier()">添加新的供应商</a>
                             </div>
                             <div class="form-group col-sm-3 col-xs-6">
                                 <label >联系人</label>
@@ -53,9 +65,53 @@
                                 <label >联系方式</label>
                                 <input type="text" class="form-control" placeholder="供应商联系号码" ng-model="order.contact_phone">
                             </div>
+                        </div>
+                        <!--
+                        <div class="row">
                             <div class="form-group col-sm-3 col-xs-6">
-                                <label >预付款</label>
-                                <input type="text" class="form-control" placeholder="应支付预付款，单位：元" ng-model="order.deposit">
+                                <label>结算方式</label>
+                                <select class="form-control">
+                                    <option>货到付款</option>
+                                    <option>款到发货</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>账期说明</label>
+                                <input type="text" class="form-control" placeholder="" ng-model="order.contact_phone">
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>采购币种</label>
+                                <select class="form-control">
+                                    <option>人民币</option>
+                                    <option>美金</option>
+                                </select>
+                            </div>
+                        </div>
+                        -->
+                        <div class="row">
+
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>运输方式</label>
+                                <select class="form-control" ng-model="order.traffic_method">
+                                    <option>自提</option>
+                                    <option>快递</option>
+                                    <option>物流</option>
+                                    <option>送货</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>结算方式</label>
+                                <select class="form-control" ng-model="settle_method">
+                                    <option>货到付款</option>
+                                    <option>款到发货</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-sm-3 col-xs-6">
+                                <label>运费</label>
+                                <select class="form-control" ng-model="settle_method">
+                                    <option>货到付款</option>
+                                    <option>款到发货</option>
+                                </select>
                             </div>
                         </div>
                     </div>

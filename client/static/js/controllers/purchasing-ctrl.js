@@ -22,18 +22,24 @@ var Role = {
     'Operator': 'operator'
 };
 
-app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope, $state, $stateParams) {
+app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope, $state, $stateParams, $uibModal) {
     $scope.id = $stateParams.id;
     $scope.order = {items: []};
     $scope.contract = {};
     $scope.searchResults = [];
     $scope.searchResultsPosition = {};
     $scope.itemError = '';
-
+    $scope.suppliers = [];
     if ($stateParams.products && $stateParams.products.length) {
         $stateParams.products.forEach(function (p) {
            $scope.order.items.push({SellerSKU: p.SellerSKU, product: p});
         });
+    }
+
+    function getSuppliers() {
+        $http.get('/api/suppliers/').then(function (result) {
+            $scope.suppliers = result.data;
+        })
     }
 
     function getProducts () {
@@ -76,6 +82,7 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
             })
         }
         getProducts();
+        getSuppliers();
     }
 
     init();
@@ -126,6 +133,41 @@ app.controller('PurchasingOrderCreateCtrl', function ($scope, $http, $rootScope,
 
     $scope.remove = function (index) {
         $scope.order.items.splice(index, 1);
+    };
+
+    $scope.addSupplier = function () {      // 添加供应商
+
+        var modalInstance = $uibModal.open({
+            size: 'lg',
+            templateUrl: '/static/templates/purchasing/create_supplier.html',//script标签中定义的id
+            controller: 'SupplierCreateCtrl',//modal对应的Controller
+            resolve: {
+                data: function () {//data作为modal的controller传入的参数
+                    return {
+                    };//用于传递数据
+                }
+            }
+        });
+        modalInstance.result.then(function (result) {
+            if (result.newSupplier) {
+                $scope.suppliers.push(result.newSupplier);
+            }
+        });
+    }
+});
+
+// 添加供应商对话框
+app.controller('SupplierCreateCtrl', function ($scope, data, $uibModalInstance) {
+
+    $scope.save = function () {
+        if ($scope.name)
+        {
+            $uibModalInstance.close({newSupplier: $scope.name});
+        }
+    };
+
+    $scope.cancel = function() {
+        $uibModalInstance.close();
     };
 });
 

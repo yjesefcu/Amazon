@@ -33,7 +33,7 @@ class PurchasingOrder(models.Model):
     # order = models.ForeignKey(PurchasingOrder, related_name='items')
     MarketplaceId = models.CharField(max_length=50)
     parent = models.ForeignKey('self', null=True, blank=True, related_name='children')       # 如果parent不为空，说明是子采购单
-    # 采购单合同
+    # 采购单合同基本信息
     contract_number = models.CharField(max_length=100)    # 合同号
     supplier = models.CharField(max_length=255, null=True, blank=True)           # 供应商
     contact_person = models.CharField(max_length=50, null=True, blank=True)     # 联系人
@@ -41,6 +41,11 @@ class PurchasingOrder(models.Model):
     traffic_comment = models.CharField(max_length=255, null=True, blank=True)   # 物流说明
     operator = models.CharField(max_length=100, null=True, blank=True)          # 经办人
     skus = models.CharField(max_length=255, null=True, blank=True)              # sku列表
+    purchasing_type = models.CharField(max_length=10, null=True, blank=True)    # 补货方式
+    settle_method = models.CharField(max_length=10, null=True, blank=True)         # 结算方式：货到付款、款到发货
+    pay_currency = models.CharField(max_length=10, null=True, blank=True)       # 币种，人民币/美金
+    pay_method = models.CharField(max_length=10, null=True, blank=True)         # 支付方式：现金、在线、银行卡
+    traffic_method = models.CharField(max_length=10, null=True, blank=True)     # 运输方式：自提、快递、物流、送货
 
     # 订单信息
     creator = models.ForeignKey(User, null=True, blank=True)                   # 采购单创建人
@@ -136,3 +141,8 @@ class PaymentRecord(models.Model):
     creator = models.ForeignKey(User, null=True, blank=True)       # 付款人
     fee_comment = models.CharField(max_length=100, null=True, blank=True)   # 款项说明
     payment_comment = models.CharField(max_length=255, null=True, blank=True)   # 支付说明
+
+
+class Supplier(models.Model):
+    # 供应商
+    name = models.CharField(max_length=100)

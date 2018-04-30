@@ -1,0 +1,21 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">添加新的供应商</h4>
+</div>
+<div class="modal-body">
+    <div class="box-body">
+        <div class="row">
+            <div class="col-sm-12">
+                <h4>供应商名称：</h4>
+                <div class="col-sm-12 col-xs-12 col-md-12 input-horizontal">
+                    <input type="text" class="form-control" placeholder="" ng-model="name" required>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-red">{{ error }}</div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default pull-left" ng-click="cancel()">取消</button>
+    <button type="button" class="btn btn-primary" ng-click="save()">确定</button>
+</div>

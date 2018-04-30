@@ -108,10 +108,18 @@ class PurchasingOrderViewSet(NestedViewSetMixin, ModelViewSet):
                 # 如果编辑的话，需要删除老的采购单信息
                 if exist_order_id:
                     PurchasingOrder.objects.get(pk=exist_order_id).delete()
+                self._add_supplier(order.supplier)
+
         except IntegrityError, ex:
             raise IntegrityError(ex)
         headers = self.get_success_headers(self.get_serializer(order).data)
         return Response(self.get_serializer(order).data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def _add_supplier(self, name):
+        # 添加供应商
+        if not name:
+            return
+        Supplier.objects.get_or_create(name=name)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
